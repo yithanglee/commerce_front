@@ -88,7 +88,21 @@ table td, table th {
     <% else  %>
     <div class="justify-center " style="page-break-after: always;">
       <% end %>
-      <%= render("header.html", email: @sale.user.email,  merchant: @merchant, username: @sale.user.username, title: @title, conn: @conn, sales: @sale, payment: user_deet  |> Map.get("payment"), shipping: user_deet |> Map.get("shipping")) %>
+      <%
+        email = if @sale.user != nil, do: @sale.user.email, else: @sale.sales_person.email
+        username = if @sale.user != nil, do: @sale.user.username, else: @sale.sales_person.email
+        payment = Map.get(user_deet, "payment")
+        shipping = Map.get(user_deet, "shipping")
+      %>
+     <%= render("header.html",
+  email: email,
+  merchant: @merchant,
+  username: username,
+  title: @title,
+  conn: @conn,
+  sales: @sale,
+  payment: payment,
+  shipping: shipping) %>
       <center class="" style="">
         <table class=" " style="width: 85%;">
           <thead>

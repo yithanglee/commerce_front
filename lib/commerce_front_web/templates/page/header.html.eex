@@ -90,7 +90,7 @@ has_merchant = @merchant != nil
         </td>
       </tr>
       <tr>
-        <td colspan="3" class="text-center">J-2-10, Kuchai Business Park, No.2, Jalan 1/127,<br>Off Jalan Kuchai Lama,
+        <td colspan="3" class="text-center">J-0-11, Kuchai Business Park, No.2, Jalan 1/127,<br>Off Jalan Kuchai Lama,
           58200 Kuala Lumpur, Malaysia.</td>
       </tr>
       <tr>
@@ -113,7 +113,20 @@ has_merchant = @merchant != nil
           <td>
           
             <span id="chosen_pay_to">
-              <%= @sales |> Map.get(:user) |> Map.get(:fullname)%></span>
+
+              <%
+
+              sales_person = @sales.sales_person 
+              user = @sales.user
+              fuser = if user == nil do 
+                sales_person
+              else
+                user
+              end 
+
+            %>
+
+              <%= fuser  |> Map.get(:fullname)%></span>
           </td>
         </tr>
         <tr >

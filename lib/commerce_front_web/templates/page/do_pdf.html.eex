@@ -82,7 +82,7 @@ table td, table th {
     <% else  %>
     <div class="justify-center " style="page-break-after: always;">
       <% end %>
-      <%= render("header.html", email: @merchant.company_email, merchant: @merchant, username: @sale.user.username, title: @title, conn: @conn, sales: @sale, payment: user_deet  |> Map.get("payment"), shipping: user_deet |> Map.get("shipping")) %>
+      <%= render("header.html", email: user_deet  |> Map.get("email", @merchant.company_email), merchant: @merchant, username: @sale.user.username, title: @title, conn: @conn, sales: @sale, payment: user_deet  |> Map.get("payment"), shipping: user_deet |> Map.get("shipping")) %>
       <center class="" style="">
         <table class=" " style="width: 85%;">
           <thead>

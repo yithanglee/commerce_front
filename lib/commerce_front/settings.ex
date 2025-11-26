@@ -2732,9 +2732,7 @@ defmodule CommerceFront.Settings do
 
   """
   def reconstruct_daily_group_sales_summary(date \\ Date.utc_today(), period \\ :daily) do
-    {y, m, d} =
-      date
-      |> Date.to_erl()
+    {y, m, d} = date |> Date.to_erl()
 
     beginning_of_month = date |> Timex.beginning_of_month()
 
@@ -2821,9 +2819,18 @@ defmodule CommerceFront.Settings do
 
         Repo.delete_all(q2)
       else
+        check =
+          CommerceFront.Repo.all(
+            from(gss in CommerceFront.Settings.GroupSalesSummary,
+              where:
+                gss.day == ^d and gss.month == ^m and
+                  gss.year == ^y
+            )
+          )
+
         ids =
-          Repo.all(
-            from(gss in GroupSalesSummary,
+          CommerceFront.Repo.all(
+            from(gss in CommerceFront.Settings.GroupSalesSummary,
               where:
                 gss.day == ^d and gss.month == ^m and
                   gss.year == ^y,
@@ -2832,13 +2839,58 @@ defmodule CommerceFront.Settings do
           )
 
         q2 =
-          from(pgsd in PlacementGroupSalesDetail)
+          from(pgsd in CommerceFront.Settings.PlacementGroupSalesDetail)
           |> where(
             [pgsd],
             not ilike(pgsd.remarks, "bring forward%") and pgsd.gs_summary_id in ^ids
           )
 
-        Repo.delete_all(q2)
+        q3 =
+          from(pgsd in CommerceFront.Settings.PlacementGroupSalesDetail)
+          |> where(
+            [pgsd],
+            ilike(pgsd.remarks, "bring forward%") and pgsd.gs_summary_id in ^ids
+          )
+
+        left_right_list = CommerceFront.Repo.all(q3)
+
+        for gss <- check do
+          left_right = left_right_list |> Enum.filter(&(&1.gs_summary_id == gss.id))
+
+          left = left_right |> Enum.filter(&(&1.position == "left"))
+          right = left_right |> Enum.filter(&(&1.position == "right"))
+
+          beginning_left =
+            if left != [] do
+              left |> Enum.at(0) |> Map.get(:after) |> IO.inspect()
+            else
+              0
+            end
+
+          beginning_right =
+            if right != [] do
+              right |> Enum.at(0) |> Map.get(:after) |> IO.inspect()
+            else
+              0
+            end
+
+          cg =
+            CommerceFront.Settings.GroupSalesSummary.changeset(gss, %{
+              balance_left: beginning_left,
+              balance_right: beginning_right,
+              new_left: 0,
+              new_right: 0,
+              paired: nil,
+              sum_left: nil,
+              sum_right: nil,
+              total_left: beginning_left,
+              total_right: beginning_right
+            })
+
+          Repo.update(cg) |> IO.inspect()
+        end
+
+        CommerceFront.Repo.delete_all(q2)
       end
 
       {:ok, nil}
@@ -4616,7 +4668,7 @@ defmodule CommerceFront.Settings do
       |> Multi.run(:ewallets, fn _repo, %{user: user} ->
         if params["upgrade"] != nil do
         else
-          wallets = ["bonus", "product", "register", "direct_recruitment"]
+          wallets = ["bonus", "product", "register", "direct_recruitment", "travel"]
 
           for wallet_type <- wallets do
             CommerceFront.Settings.create_wallet_transaction(%{
@@ -4651,8 +4703,12 @@ defmodule CommerceFront.Settings do
       |> Multi.run(:member_instalment, fn _repo, %{sale: sale, user: user} ->
         sale = sale |> Repo.preload(:sales_items)
 
-        unless "merchant" in Map.keys(params) do
-          for item <- sale.sales_items do
+        with false <- "merchant" in Map.keys(params),
+             true <- sale != nil,
+             sales_items <- sale.sales_items do
+          IO.inspect(sales_items, label: "sales_items")
+
+          for item <- sales_items do
             product = get_product_by_name(item |> Map.get(:item_name))
 
             cond do
@@ -4746,6 +4802,9 @@ defmodule CommerceFront.Settings do
                 nil
             end
           end
+        else
+          _ ->
+            nil
         end
 
         {:ok, nil}
@@ -4986,14 +5045,15 @@ defmodule CommerceFront.Settings do
               params["scope"]
             )
 
-            create_wallet_transaction(%{
-              user_id: user.id,
-              amount: 1152.00,
-              remarks: "Stockist Upgrade - Additional DRP",
-              wallet_type: "direct_recruitment"
-            })
+            # jun 17: robert say no more u1, u2 , now give more DT2
+            # create_wallet_transaction(%{
+            #   user_id: user.id,
+            #   amount: 1152.00,
+            #   remarks: "Stockist Upgrade - Additional DRP",
+            #   wallet_type: "direct_recruitment"
+            # })
 
-            CommerceFront.Settings.convert_to_stockist(user |> Map.put(:placement, placement))
+            # CommerceFront.Settings.convert_to_stockist(user |> Map.put(:placement, placement))
           else
             {:ok, nil}
           end
@@ -5011,20 +5071,24 @@ defmodule CommerceFront.Settings do
                                      placement: placement,
                                      sales_person: sales_person
                                    } ->
-        {:ok, register_params} = sale.registration_details |> Jason.decode()
+        if sale != nil do
+          {:ok, register_params} = sale.registration_details |> Jason.decode()
 
-        scope = register_params |> Map.get("scope")
+          scope = register_params |> Map.get("scope")
 
-        if scope == "link_register" do
-          # when the payment got through only then pay the additional20% BP to the share link owner...
-          # aka sponsor...
+          if scope == "link_register" do
+            # when the payment got through only then pay the additional20% BP to the share link owner...
+            # aka sponsor...
 
-          create_wallet_transaction(%{
-            user_id: sale.sales_person_id,
-            amount: sale.grand_total * 0.2,
-            remarks: "Sales: #{sale.id}| Share link pay back as cash commission",
-            wallet_type: "bonus"
-          })
+            create_wallet_transaction(%{
+              user_id: sale.sales_person_id,
+              amount: sale.grand_total * 0.2,
+              remarks: "Sales: #{sale.id}| Share link pay back as cash commission",
+              wallet_type: "bonus"
+            })
+          end
+        else
+          nil
         end
 
         {:ok, nil}
@@ -5390,6 +5454,23 @@ defmodule CommerceFront.Settings do
             end
 
           cond do
+            reward.name == "travel fund" ->
+              params = %{
+                reward_id: reward.id,
+                user_id: reward.user_id,
+                amount: reward.amount |> Float.round(2),
+                remarks: reward.remarks,
+                wallet_type: "travel"
+              }
+
+              case create_wallet_transaction(params) do
+                {:ok, wt} ->
+                  update_reward(reward, %{is_paid: true})
+
+                {:error, cg} ->
+                  {:error, cg}
+              end
+
             reward.name == "royalty bonus" ->
               params = %{
                 reward_id: reward.id,
@@ -6634,7 +6715,7 @@ defmodule CommerceFront.Settings do
               where: u.username == ^user.username or s.user_id == ^user.id,
               where: is_nil(s.merchant_id),
               where: s.status not in ^[:pending_payment, :cancelled, :refund],
-              where: s.inserted_at > ^sdate and s.inserted_at < ^edate,
+              where: s.inserted_at > ^sdate,
               group_by: [s.sales_person_id],
               select: sum(s.subtotal)
             )
@@ -6697,7 +6778,7 @@ defmodule CommerceFront.Settings do
               where: u.username == ^user.username or s.user_id == ^user.id,
               where: not is_nil(s.merchant_id),
               where: s.status not in ^[:pending_payment, :cancelled, :refund],
-              where: s.inserted_at >= ^sdate and s.inserted_at < ^edate,
+              where: s.inserted_at >= ^sdate ,
               group_by: [s.sales_person_id],
               select: sum(s.subtotal)
             )
@@ -8049,6 +8130,25 @@ defmodule CommerceFront.Settings do
       |> List.first()
 
     freebie = mi |> Repo.preload(:freebie) |> Map.get(:freebie)
+  end
+
+  def reseed_travel_wallet() do
+    users = Repo.all(User)
+
+    checks = Repo.all(from(w in Ewallet, where: w.wallet_type == "travel"))
+
+    for user <- users do
+      check = Enum.filter(checks, &(&1.user_id == user.id))
+
+      if check == [] do
+        CommerceFront.Settings.create_wallet_transaction(%{
+          user_id: user.id,
+          amount: 0.00,
+          remarks: "initial",
+          wallet_type: "travel"
+        })
+      end
+    end
   end
 
   @doc """

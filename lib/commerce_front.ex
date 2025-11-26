@@ -72,13 +72,13 @@ defmodule CommerceFront do
     # can only run once
     CommerceFront.Settings.carry_forward_entry(date)
     # this will form the weak leg
-
-    # CommerceFront.Settings.pay_unpaid_bonus(date, [
-    #   "sharing bonus",
-    #   "team bonus",
-    #   "stockist register bonus",
-    #   "drp sales level bonus"
-    # ])
+      # "sharing bonus",
+      # "stockist register bonus",
+      # "drp sales level bonus"
+    CommerceFront.Settings.pay_unpaid_bonus(date, [
+      
+      "team bonus"
+    ])
 
     if end_of_month == date do
       CommerceFront.Calculation.matching_bonus(m, y)

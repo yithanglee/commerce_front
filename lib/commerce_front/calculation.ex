@@ -81,57 +81,58 @@ defmodule CommerceFront.Calculation do
       upline_rank = matrix |> Enum.filter(&(&1.rank == upline.rank)) |> List.first()
 
       if upline_rank != nil do
-        last_month_sum = Settings.last_month_sales(upline.parent)
+        # last_month_sum = Settings.last_month_sales(upline.parent)
 
-        if upline_rank.rank in ["PreferredShopper", "铜级套餐", "银级套餐", "金级套餐"] &&
-             last_month_sum < 36 do
-          index
-        else
-          if index < 8 do
-            IO.inspect("current index at #{index}")
+        # if upline_rank.rank in ["PreferredShopper", "铜级套餐", "银级套餐", "金级套餐"] &&
+        #      last_month_sum < 36 do
+        #   index
+        # else
+        # # prev code here 
+        # end
+        if index < 8 do
+          IO.inspect("current index at #{index}")
 
-            max =
-              matrix |> Enum.filter(&(&1.rank == upline.rank)) |> List.first() |> Map.get(:max)
+          max =
+            matrix |> Enum.filter(&(&1.rank == upline.rank)) |> List.first() |> Map.get(:max)
 
-            perc = (merchant.commission_perc / 8) |> Float.round(4)
+          perc = (merchant.commission_perc / 8) |> Float.round(4)
 
-            if index < max do
-              amount = (perc * sale.total_point_value) |> Float.round(2)
+          if index < max do
+            amount = (perc * sale.total_point_value) |> Float.round(2)
 
-              CommerceFront.Settings.create_reward(%{
-                sales_id: sale.id,
-                is_paid: false,
-                remarks:
-                  "sales-#{sale.id} on #{y}-#{m}-#{d}|commission perc: #{perc}|level: #{index + 1}|upline rank: #{upline.rank} | #{perc} * #{sale.total_point_value} ",
-                name: "merchant sales level bonus",
-                amount: amount,
-                user_id: upline.parent_id,
-                day: d,
-                month: m,
-                year: y
-              })
-            else
-              IO.inspect("not qualify, will pay to unpaid")
+            CommerceFront.Settings.create_reward(%{
+              sales_id: sale.id,
+              is_paid: false,
+              remarks:
+                "sales-#{sale.id} on #{y}-#{m}-#{d}|commission perc: #{perc}|level: #{index + 1}|upline rank: #{upline.rank} | #{perc} * #{sale.total_point_value} ",
+              name: "merchant sales level bonus",
+              amount: amount,
+              user_id: upline.parent_id,
+              day: d,
+              month: m,
+              year: y
+            })
+          else
+            IO.inspect("not qualify, will pay to unpaid")
 
-              amount = (perc * sale.total_point_value) |> Float.round(2)
+            amount = (perc * sale.total_point_value) |> Float.round(2)
 
-              CommerceFront.Settings.create_reward(%{
-                sales_id: sale.id,
-                is_paid: false,
-                remarks:
-                  "sales-#{sale.id} on #{y}-#{m}-#{d}|commission perc: #{perc}|level: #{index + 1}| #{perc} * #{sale.total_point_value} ",
-                name: "merchant sales level bonus",
-                amount: amount,
-                user_id: unpaid_node.parent_id,
-                day: d,
-                month: m,
-                year: y
-              })
-            end
+            CommerceFront.Settings.create_reward(%{
+              sales_id: sale.id,
+              is_paid: false,
+              remarks:
+                "sales-#{sale.id} on #{y}-#{m}-#{d}|commission perc: #{perc}|level: #{index + 1}| #{perc} * #{sale.total_point_value} ",
+              name: "merchant sales level bonus",
+              amount: amount,
+              user_id: unpaid_node.parent_id,
+              day: d,
+              month: m,
+              year: y
+            })
           end
-
-          index + 1
         end
+
+        index + 1
       else
         index
       end
@@ -210,13 +211,16 @@ defmodule CommerceFront.Calculation do
             )
 
           if check == [] do
+            res2 = (accumulated_perc - prev_perc) |> Float.round(3)
+
             CommerceFront.Settings.create_reward(%{
               sales_id: sale.id,
               is_paid: false,
               remarks:
                 "sales-#{sale.id} on #{y}-#{m}-#{d}|royalty perc: #{perc}|calc perc: #{res}| #{res} * #{sale.total_point_value} ",
               name: "royalty bonus",
-              amount: amt,
+              # amount: amt,
+              amount: (res * sale.total_point_value) |> Float.round(2),
               user_id: upline_user.id,
               day: d,
               month: m,
@@ -226,10 +230,10 @@ defmodule CommerceFront.Calculation do
             IO.inspect("there is paid royalty bonus ")
           end
 
-          0
+          nil
         end
       else
-        prev_perc
+        {prev_perc, accumulated_perc}
       end
     end
 
@@ -509,23 +513,56 @@ defmodule CommerceFront.Calculation do
              matrix_item
              |> Map.get(:calculated),
            true <- calculated == false do
-        bonus = remainder_point_value * perc
+        {bonus, remainder_point_value, addon_gold_bonus} =
+          case calc_index do
+            1 ->
+              if rank.name == "金级套餐" do
+                {remainder_point_value * perc, remainder_point_value, 0}
+              else
+                {min(remainder_point_value, 200) * perc, min(remainder_point_value, 200), 0}
+              end 
+       
+
+            2 ->
+              bonus = remainder_point_value * perc
+              {bonus, remainder_point_value, 0}
+
+            3 ->
+              bonus = remainder_point_value * perc
+
+              {bonus, addon_gold_bonus} =
+                if total_point_value > 200 do
+                  # if  at calc_index 1 is a rank gold, then no need  * 0.2 ...
+                 lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
+                  
+                  if lv1 == "金级套餐" do
+                    {bonus, 0}
+                  else
+                    {bonus, (total_point_value - 200) * 0.2}
+                  end
+                
+                else
+                  {bonus, 0}
+                end
+              
+              {bonus , remainder_point_value, addon_gold_bonus}
+          end
 
         {:ok, r} =
           CommerceFront.Settings.create_reward(%{
             sales_id: sale.id,
             is_paid: false,
             remarks:
-              "sales-#{sale.id}|#{remainder_point_value} * #{perc} = #{bonus}|lvl:#{calc_index}/#{rank.name}|skipped to: lv#{index}",
+              "sales-#{sale.id}|#{remainder_point_value} * #{perc} = #{bonus} + #{addon_gold_bonus}|lvl:#{calc_index}/#{rank.name}|skipped to: lv#{index}",
             name: "sharing bonus",
-            amount: bonus,
+            amount: bonus + addon_gold_bonus,
             user_id: user.id,
             day: Date.utc_today().day,
             month: Date.utc_today().month,
             year: Date.utc_today().year
           })
 
-        CommerceFront.Settings.pay_to_bonus_wallet(r)
+        # CommerceFront.Settings.pay_to_bonus_wallet(r)
 
         new_matrix_item =
           matrix |> Enum.find(&(&1.rank == rank.name)) |> Map.put(:calculated, true)

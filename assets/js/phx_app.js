@@ -1326,6 +1326,7 @@ export let phxApp_ = {
             object +
             '[' + assoc_val[0] + '][' + assoc_val[1] + ']"  aria-value="' + qv.data + '">';
         } else {
+          console.log('qv', qv.data)
 
           input2 =
             '<input type="hidden" aria-label="' +
