@@ -385,8 +385,8 @@ defmodule CommerceFront.Calculation do
   22 mar 24'
   base on override perc to calc
 
-  sale = CommerceFront.Settings.get_sale!(130)
-  referral = CommerceFront.Settings.get_referral_by_username("freddy")
+  sale = CommerceFront.Settings.get_sale!(624)
+  referral = CommerceFront.Settings.get_referral_by_username("chingyee")
   CommerceFront.Calculation.special_share_reward(  referral.parent_user_id, sale.total_point_value, sale, "upgrade")
 
   """

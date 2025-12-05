@@ -391,7 +391,7 @@ defmodule CommerceFrontWeb.ApiController do
                 |> Enum.filter(&(&1.parent == parent.username))
 
               res =
-                Settings.accumulated_sales_by_user(user, params["show_rank"])
+                Settings.accumulated_sales_by_user(user, params["show_rank"]) |> IO.inspect(label: "accumulated_sales_by_user #{user.username}")
                 |> List.insert_at(2, %{"is_direct_downline" => check})
                 |> List.insert_at(3, %{"is_downline" => check2 != []})
 

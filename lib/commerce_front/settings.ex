@@ -2388,6 +2388,18 @@ defmodule CommerceFront.Settings do
     |> List.first()
   end
 
+  @doc"""
+ CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
+
+ sales = CommerceFront.Settings.get_sale!(627)
+ placement = CommerceFront.Settings.get_placement_by_username("yokechu")
+
+ CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
+
+ CommerceFront.Settings.contribute_group_sales("yokechu", -700, sales, placement)
+
+  """
+
   def contribute_group_sales(
         from_username,
         amount,
@@ -6702,12 +6714,14 @@ defmodule CommerceFront.Settings do
 
     user = user |> Repo.preload(:rank)
 
-    sdate = user.inserted_at
+    sdate = user.inserted_at  |> Timex.shift(minutes: -10)
     edate = sdate |> Timex.shift(months: 6)
 
     if user != nil do
       res =
         if Date.compare(edate, Date.utc_today()) == :lt do
+          IO.inspect(sdate, label: "sdate lt")
+          IO.inspect(edate, label: "edate lt")
           Repo.all(
             from(s in Sale,
               left_join: u in User,
@@ -6716,24 +6730,26 @@ defmodule CommerceFront.Settings do
               where: is_nil(s.merchant_id),
               where: s.status not in ^[:pending_payment, :cancelled, :refund],
               where: s.inserted_at > ^sdate,
-              group_by: [s.sales_person_id],
+              group_by: [s.user_id],
               select: sum(s.subtotal)
             )
           )
           |> List.first()
         else
+          IO.inspect(sdate, label: "sdate")
+          IO.inspect(edate, label: "edate")
           Repo.all(
             from(s in Sale,
               left_join: u in User,
-              on: s.sales_person_id == u.id,
+              on: s.user_id == u.id,
               where: u.username == ^user.username or s.user_id == ^user.id,
               where: is_nil(s.merchant_id),
               where: s.status not in ^[:pending_payment, :cancelled, :refund],
               where: s.inserted_at > ^sdate and s.inserted_at < ^edate,
-              group_by: [s.sales_person_id],
+              group_by: [s.user_id],
               select: sum(s.subtotal)
             )
-          )
+          )|> IO.inspect(label: "res")
           |> List.first()
         end
 
