@@ -87,13 +87,12 @@ defmodule CommerceFront.Calculation do
         #      last_month_sum < 36 do
         #   index
         # else
-        # # prev code here 
+        # # prev code here
         # end
         if index < 8 do
           IO.inspect("current index at #{index}")
 
-          max =
-            matrix |> Enum.filter(&(&1.rank == upline.rank)) |> List.first() |> Map.get(:max)
+          max = matrix |> Enum.filter(&(&1.rank == upline.rank)) |> List.first() |> Map.get(:max)
 
           perc = (merchant.commission_perc / 8) |> Float.round(4)
 
@@ -451,7 +450,198 @@ defmodule CommerceFront.Calculation do
   need to pay the rest to unpaid account
 
   """
+
   def sharing_bonus(username, total_point_value, sale, referral) do
+    unpaid_node = unpaid_node()
+
+    uplines =
+      CommerceFront.Settings.check_uplines(username, :referal)
+      |> Enum.reverse()
+      |> List.insert_at(0, unpaid_node)
+      |> List.insert_at(0, unpaid_node)
+      |> List.insert_at(0, unpaid_node)
+      |> Enum.reverse()
+      |> Enum.with_index(1)
+
+    matrix = [
+      %{rank: "铜级套餐", l1: 0.2, calculated: false, max_pv: [200]},
+      %{rank: "银级套餐", l1: 0.2, l2: 0.1, calculated: false, max_pv: [200, 200]},
+      %{rank: "金级套餐", l1: 0.2, l2: 0.1, l3: 0.1, calculated: false, max_pv: [200, 200, 300]}
+    ]
+
+    run_calc = fn {upline, index}, {calc_index, eval_matrix, {remainder_point_value, consumed_pv}} ->
+      user = CommerceFront.Settings.get_user_by_username(upline.parent)
+      rank = user.rank_id |> CommerceFront.Settings.get_rank!() |> IO.inspect()
+
+      calc_table =
+        matrix
+        |> Enum.filter(&(&1.rank == rank.name))
+        |> List.first()
+
+      perc =
+        if calc_table != nil do
+          case calc_index do
+            1 ->
+              calc_table |> Map.get(:l1, 0)
+
+            2 ->
+              calc_table |> Map.get(:l2, 0)
+
+            3 ->
+              calc_table |> Map.get(:l3, 0)
+
+            _ ->
+              0
+          end
+          |> IO.inspect()
+        else
+          0
+        end
+
+      with true <- calc_table != nil,
+           true <- calc_index < 4,
+           list <-
+             eval_matrix
+             |> Enum.reject(&(&1.calculated == true))
+             |> Enum.filter(&(&1.rank == rank.name)),
+           true <- list != [],
+           matrix_item <-
+             list
+             |> List.first(),
+           calculated <-
+             matrix_item
+             |> Map.get(:calculated),
+           true <- calculated == false do
+
+        max_pv = matrix_item |> Map.get(:max_pv, 0) |> Enum.at(calc_index - 1)
+
+        # Get the first upline rank to check special case
+        lv1_rank = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
+        lv2_rank = uplines |> Enum.at(1) |> elem(0) |> Map.get(:rank)
+
+        # Base bonus is calculated from the original total_point_value
+        base_bonus = total_point_value * perc
+
+        # PV consumed for this calc_index (limited by max_pv)
+        pv_consumed_for_base = min(remainder_point_value, max_pv)
+
+        # Calculate remaining PV after this calc_index consumes its max_pv
+        remaining_after_base = remainder_point_value - pv_consumed_for_base
+
+        # Calculate addon bonus based on remaining PV thresholds
+        # Addon bonus is calculated from PV that's available after all previous calc_indexes consumed their max_pv
+        # The available PV for addon is: total_point_value - consumed_pv (before this calc_index)
+        available_for_addon = total_point_value - consumed_pv
+        IO.inspect(available_for_addon, label: "available_for_addon #{calc_index} #{rank.name}")
+        IO.inspect(total_point_value, label: "total_point_value")
+        IO.inspect(consumed_pv, label: "consumed_pv")
+        {base_bonus, addon_bonus, addon_pv_used} =
+          cond do
+            # Gold at calc_index 3: addon for 300 PV if available >= 300
+            calc_index == 3 && rank.name == "金级套餐"  ->
+              cond do
+                available_for_addon >= 300 ->
+                  {base_bonus, 300 * 0.2, 300}
+                lv2_rank == "银级套餐" && lv2_rank == "银级套餐"  ->
+                  {base_bonus, 300 * 0.2, 300}
+                true ->
+                  {base_bonus, 0, 0}
+              end
+
+
+            # Gold at calc_index 2:
+            # - If available PV >= 500 (meaning calc_index 3 didn't consume), addon for 500 PV
+            # - Otherwise, if available PV >= 300, addon for 300 PV
+            calc_index == 2 && rank.name == "金级套餐" ->
+
+              if available_for_addon >= 500 do
+                # calc_index 3 didn't get anything, so addon for 500 PV
+                {base_bonus, 500 * 0.2, 500}
+              else
+                if available_for_addon >= 300 do
+                  if lv1_rank == "金级套餐" do
+                    {base_bonus, 0, 0}
+                  else
+                    {base_bonus, 300 * 0.2, 300}
+                  end
+
+                else
+                  {base_bonus, 0, 0}
+                end
+              end
+
+            # Silver at calc_index 2: addon for 200 PV if available >= 200
+            calc_index == 2 && rank.name == "银级套餐" && available_for_addon >= 200 ->
+              if lv1_rank == "银级套餐" do
+
+                {base_bonus, 0, 0}
+              else
+                {base_bonus, 200 * 0.2, 0}
+              end
+
+
+            # Bronze/Silver at calc_index 1: addon for 200 PV if available >= 200
+            calc_index == 1 && available_for_addon >= 200 ->
+
+                if lv1_rank == "金级套餐" do
+                  {base_bonus, 0, 200}
+                else
+                  if lv1_rank == "银级套餐" do
+                    {200 * 0.2, 200 * 0.2, 200}
+                  else
+                    {200 * 0.2, 0, 0}
+                  end
+                end
+
+
+
+
+            true ->
+              {base_bonus, 0, 0}
+          end
+
+        # Update consumed PV and remainder
+        new_consumed_pv = consumed_pv + pv_consumed_for_base + addon_pv_used
+        new_remainder = remainder_point_value - pv_consumed_for_base - addon_pv_used
+
+        {:ok, r} =
+          CommerceFront.Settings.create_reward(%{
+            sales_id: sale.id,
+            is_paid: false,
+            remarks:
+              "sales-#{sale.id}|calc_index:#{calc_index}|base:#{total_point_value}PV*#{perc}=#{base_bonus}|addon:#{addon_pv_used}PV*0.2=#{addon_bonus}|total:#{base_bonus + addon_bonus}|rank:#{rank.name}|skipped to: lv#{index}",
+            name: "sharing bonus",
+            amount: base_bonus + addon_bonus,
+            user_id: user.id,
+            day: Date.utc_today().day,
+            month: Date.utc_today().month,
+            year: Date.utc_today().year
+          })
+
+        # CommerceFront.Settings.pay_to_bonus_wallet(r)
+
+        new_matrix_item =
+          matrix |> Enum.find(&(&1.rank == rank.name)) |> Map.put(:calculated, true)
+
+        remove_index = matrix |> Enum.find_index(&(&1.rank == rank.name))
+
+        pre_matrix = List.delete_at(matrix, 0)
+
+        next_matrix = List.insert_at(pre_matrix, 0, new_matrix_item)
+
+        {calc_index + 1, next_matrix, {new_remainder, new_consumed_pv}}
+      else
+        _ ->
+          {calc_index, eval_matrix, {remainder_point_value, consumed_pv}}
+      end
+    end
+
+    Enum.reduce(uplines, {1, matrix, {total_point_value, 0}}, &run_calc.(&1, &2))
+
+    {:ok, nil}
+  end
+
+  def _sharing_bonus(username, total_point_value, sale, referral) do
     unpaid_node = unpaid_node()
 
     uplines =
@@ -513,39 +703,95 @@ defmodule CommerceFront.Calculation do
              matrix_item
              |> Map.get(:calculated),
            true <- calculated == false do
-        {bonus, remainder_point_value, addon_gold_bonus} =
+        # remainder_point_value initial is 700
+        {bonus, remainder_point_value, addon_gold_bonus, addon_silver_bonus} =
           case calc_index do
             1 ->
-              if rank.name == "金级套餐" do
-                {remainder_point_value * perc, remainder_point_value, 0}
-              else
-                {min(remainder_point_value, 200) * perc, min(remainder_point_value, 200), 0}
-              end 
-       
+              case rank.name do
+                "金级套餐" ->
+                  {remainder_point_value * perc, remainder_point_value, 0, 0}
+
+                "银级套餐" ->
+                  if total_point_value > 400 do
+                    {min(remainder_point_value, 200) * perc, min(remainder_point_value, 200), 0,
+                     200 * 0.2}
+                  else
+                    {remainder_point_value * perc, remainder_point_value, 0, 0}
+                  end
+
+                _ ->
+                  {min(remainder_point_value, 200) * perc, min(remainder_point_value, 200), 0, 0}
+              end
 
             2 ->
               bonus = remainder_point_value * perc
-              {bonus, remainder_point_value, 0}
+
+              case rank.name do
+                "银级套餐" ->
+                  bonus = remainder_point_value * perc
+
+                  {bonus, addon_silver_bonus} =
+                    if total_point_value > 400 do
+                      # if  at calc_index 1 is a rank gold, then no need  * 0.2 ...
+                      lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
+
+                      if lv1 in ["金级套餐", "银级套餐"] do
+                        {bonus, 0}
+                      else
+                        {bonus, 200 * 0.2}
+                      end
+                    else
+                      {bonus, 0}
+                    end
+
+                  {bonus, remainder_point_value, 0, addon_silver_bonus}
+
+                "金级套餐" ->
+                  bonus = remainder_point_value * perc
+
+                  {bonus, addon_silver_bonus} =
+                    if total_point_value > 400 do
+                      # if  at calc_index 1 is a rank gold, then no need  * 0.2 ...
+                      lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
+
+                      case lv1 do
+                        "金级套餐" ->
+                          {bonus, 0}
+
+                        "银级套餐" ->
+                          {bonus, 300 * 0.2}
+
+                        _ ->
+                          {bonus, 200 * 0.2}
+                      end
+                    else
+                      {bonus, 0}
+                    end
+
+                  {bonus, remainder_point_value, 0, addon_silver_bonus}
+
+                _ ->
+                  {bonus, remainder_point_value, 0, 0}
+              end
 
             3 ->
               bonus = remainder_point_value * perc
 
               {bonus, addon_gold_bonus} =
-                if total_point_value > 200 do
+                if total_point_value > 400 do
                   # if  at calc_index 1 is a rank gold, then no need  * 0.2 ...
-                 lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
-                  
+                  lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
+
                   if lv1 == "金级套餐" do
                     {bonus, 0}
                   else
-                    {bonus, (total_point_value - 200) * 0.2}
+                    {bonus, (total_point_value - 400) * 0.2}
                   end
-                
                 else
                   {bonus, 0}
                 end
-              
-              {bonus , remainder_point_value, addon_gold_bonus}
+
+              {bonus, remainder_point_value, addon_gold_bonus, 0}
           end
 
         {:ok, r} =
@@ -553,9 +799,9 @@ defmodule CommerceFront.Calculation do
             sales_id: sale.id,
             is_paid: false,
             remarks:
-              "sales-#{sale.id}|#{remainder_point_value} * #{perc} = #{bonus} + #{addon_gold_bonus}|lvl:#{calc_index}/#{rank.name}|skipped to: lv#{index}",
+              "sales-#{sale.id}|#{remainder_point_value} * #{perc} = #{bonus} + #{addon_gold_bonus}#{addon_silver_bonus}|lvl:#{calc_index}/#{rank.name}|skipped to: lv#{index}",
             name: "sharing bonus",
-            amount: bonus + addon_gold_bonus,
+            amount: bonus + addon_gold_bonus + addon_silver_bonus,
             user_id: user.id,
             day: Date.utc_today().day,
             month: Date.utc_today().month,
