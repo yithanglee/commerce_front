@@ -4651,11 +4651,33 @@ defmodule CommerceFront.Settings do
               sales.subtotal
 
           # determine wat rank he reached based on new pv...
-          new_rank =
+          ranks =
             CommerceFront.Settings.list_ranks()
             |> Enum.sort_by(& &1.retail_price)
+
+          rank_from_pv =
+            ranks
             |> Enum.filter(&(&1.retail_price <= total_pv))
             |> List.last()
+
+          # never downgrade on upgrade: keep current rank if PV-based rank is lower
+          current_rank = upgrade_target_user.rank
+
+          new_rank =
+            cond do
+              is_nil(rank_from_pv) ->
+                current_rank || List.first(ranks)
+
+              is_nil(current_rank) ->
+                rank_from_pv
+
+              current_rank.retail_price >= rank_from_pv.retail_price ->
+                current_rank
+
+              true ->
+                rank_from_pv
+            end
+
 
           prm = %{
             rank_id: new_rank.id,
