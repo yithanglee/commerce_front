@@ -516,8 +516,8 @@ defmodule CommerceFront.Settings do
     {amount, _tail} = Float.parse(params["amount"])
 
     cond do
-      amount < 100 ->
-        {:error, Ecto.Changeset.add_error(cg, :amount, "Cannot be less than 100")}
+      amount < 50 ->
+        {:error, Ecto.Changeset.add_error(cg, :amount, "Cannot be less than 50")}
 
       amount > wallet.total ->
         {:error,
@@ -3560,7 +3560,7 @@ defmodule CommerceFront.Settings do
                 if params["user"]["shipping"]["state"] in ["Sabah", "Sarawak", "Labuan"] do
                   Float.ceil(total_rp / 200) * 4
                 else
-                  if total_rp >= 100 do
+                  if total_rp >= 36 do
                     shipping_fee
                   else
                     2

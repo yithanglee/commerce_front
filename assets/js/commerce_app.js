@@ -2693,7 +2693,7 @@ export let commerceApp_ = {
                             s = Math.ceil(subtotal / 200) * 2
                         } else {
 
-                            if (subtotal >= 100) {
+                            if (subtotal >= 36) {
                                 s = 0
                             } else {
                                 s = 2
@@ -2921,7 +2921,7 @@ export let commerceApp_ = {
             const cart = is_merchant ? commerceApp_.mcart_ : commerceApp_.cart_;
             var hasOverride = false,
                 count = 0,
-                shipping_fee = 2,
+                shipping_fee = 0,
                 list = [],
                 total_pv = 0,
                 subtotal = 0.0;
