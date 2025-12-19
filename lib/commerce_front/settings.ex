@@ -1324,6 +1324,338 @@ defmodule CommerceFront.Settings do
     Repo.delete(model)
   end
 
+  @doc """
+  Seed Luckydraw Event Promo Pack products (Malaysia only) and their component stock mappings.
+
+  Intended to be run from terminal:
+
+      mix run -e 'CommerceFront.Settings.seed_luckydraw_event_promo_packs()'
+  """
+  def seed_luckydraw_event_promo_packs() do
+    country =
+      case get_malaysia() do
+        nil ->
+          # Keep this safe + idempotent: Country schema doesn't require fields.
+          {:ok, c} =
+            create_country(%{
+              name: "Malaysia",
+              alias: "MY",
+              currency: "MYR",
+              conversion: 1.0,
+              img_url: ""
+            })
+
+          c
+
+        c ->
+          c
+      end
+
+    get_or_create_stock = fn stock_name ->
+      case Repo.get_by(CommerceFront.Settings.Stock, name: stock_name) do
+        nil ->
+          # Stocks are expected to already exist in your main DB.
+          # But for fresh/local DBs, auto-create them so the seed can run end-to-end.
+          {:ok, stock} =
+            create_stock(%{
+              name: stock_name,
+              desc: "Auto-created by seed_luckydraw_event_promo_packs"
+            })
+
+          stock
+
+        stock ->
+          stock
+      end
+    end
+
+    upsert_product_by_name = fn attrs ->
+      name = Map.fetch!(attrs, :name)
+
+      case get_product_by_name(name) do
+        nil ->
+          {:ok, p} = create_product(attrs)
+          p
+
+        product ->
+          {:ok, p} = update_product(product, attrs)
+          p
+      end
+    end
+
+    set_product_country = fn product ->
+      Repo.delete_all(
+        from(pc in CommerceFront.Settings.ProductCountry, where: pc.product_id == ^product.id)
+      )
+
+      CommerceFront.Settings.ProductCountry.changeset(struct(CommerceFront.Settings.ProductCountry), %{
+        product_id: product.id,
+        country_id: country.id
+      })
+      |> Repo.insert()
+
+      :ok
+    end
+
+    set_product_stocks = fn product, stock_qty_list ->
+      Repo.delete_all(from(ps in CommerceFront.Settings.ProductStock, where: ps.product_id == ^product.id))
+
+      for {stock_name, qty} <- stock_qty_list do
+        stock = get_or_create_stock.(stock_name)
+
+        CommerceFront.Settings.ProductStock.changeset(struct(CommerceFront.Settings.ProductStock), %{
+          product_id: product.id,
+          stock_id: stock.id,
+          qty: qty
+        })
+        |> Repo.insert()
+      end
+
+      :ok
+    end
+
+    promo_a =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack A",
+        cname: "Luckydraw Event Promo Pack A",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack A
+
+        Includes:
+        - Portable Air Purifier x1
+        - Hsavior x1
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_b =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack B",
+        cname: "Luckydraw Event Promo Pack B",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack B
+
+        Includes:
+        - Portable Air Purifier x1
+        - RibenTox x1
+        - TigerM x1
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_c =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack C",
+        cname: "Luckydraw Event Promo Pack C",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack C
+
+        Includes:
+        - Hsavior x2
+        - RibenTox x1
+        - TigerM x1
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_d =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack D",
+        cname: "Luckydraw Event Promo Pack D",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack D
+
+        Includes:
+        - LutiGlo x2
+        - RibenTox x1
+        - TigerM x1
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_e =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack E",
+        cname: "Luckydraw Event Promo Pack E",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack E
+
+        Includes:
+        - Hsavior x1
+        - LutiGlo x1
+        - RibenTox x1
+        - TigerM x1
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_f =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack F",
+        cname: "Luckydraw Event Promo Pack F",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack F
+
+        Includes:
+        - FeCare x2
+        - RibenTox x1
+        - TigerM x1
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_g =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack G",
+        cname: "Luckydraw Event Promo Pack G",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack G
+
+        Includes:
+        - RibenTox x5
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_h =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack H",
+        cname: "Luckydraw Event Promo Pack H",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack H
+
+        Includes:
+        - TigerM x7
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    promo_i =
+      upsert_product_by_name.(%{
+        name: "Luckydraw Event Promo Pack I",
+        cname: "Luckydraw Event Promo Pack I",
+        category: "Luckydraw",
+        category_id: 0,
+        img_url: "null",
+        retail_price: 100.0,
+        point_value: 30,
+        desc: """
+        RP100 | 30PV
+
+        Luckydraw Event Promo Pack I
+
+        Includes:
+        - RibenTox x3
+        - TigerM x3
+        - Grand Convention Event Ticket x1
+        - Lucky Draw Entry Ticket x1
+        """
+      })
+
+    set_product_country.(promo_a)
+    set_product_country.(promo_b)
+    set_product_country.(promo_c)
+    set_product_country.(promo_d)
+    set_product_country.(promo_e)
+    set_product_country.(promo_f)
+    set_product_country.(promo_g)
+    set_product_country.(promo_h)
+    set_product_country.(promo_i)
+
+    tickets = [{"Grand Convention Event Ticket", 1}, {"Lucky Draw Entry Ticket", 1}]
+
+    set_product_stocks.(promo_a, [{"Portable Air Purifier", 1}, {"Hsavior", 1}] ++ tickets)
+    set_product_stocks.(promo_b, [{"Portable Air Purifier", 1}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
+    set_product_stocks.(promo_c, [{"Hsavior", 2}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
+    set_product_stocks.(promo_d, [{"LutiGlo", 2}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
+    set_product_stocks.(promo_e, [{"Hsavior", 1}, {"LutiGlo", 1}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
+    set_product_stocks.(promo_f, [{"FeCare", 2}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
+    set_product_stocks.(promo_g, [{"RibenTox", 5}] ++ tickets)
+    set_product_stocks.(promo_h, [{"TigerM", 7}] ++ tickets)
+    set_product_stocks.(promo_i, [{"RibenTox", 3}, {"TigerM", 3}] ++ tickets)
+
+    %{
+      status: :ok,
+      country: country.name,
+      products: [
+        %{id: promo_a.id, name: promo_a.name, rp: promo_a.retail_price, pv: promo_a.point_value},
+        %{id: promo_b.id, name: promo_b.name, rp: promo_b.retail_price, pv: promo_b.point_value},
+        %{id: promo_c.id, name: promo_c.name, rp: promo_c.retail_price, pv: promo_c.point_value},
+        %{id: promo_d.id, name: promo_d.name, rp: promo_d.retail_price, pv: promo_d.point_value},
+        %{id: promo_e.id, name: promo_e.name, rp: promo_e.retail_price, pv: promo_e.point_value},
+        %{id: promo_f.id, name: promo_f.name, rp: promo_f.retail_price, pv: promo_f.point_value},
+        %{id: promo_g.id, name: promo_g.name, rp: promo_g.retail_price, pv: promo_g.point_value},
+        %{id: promo_h.id, name: promo_h.name, rp: promo_h.retail_price, pv: promo_h.point_value},
+        %{id: promo_i.id, name: promo_i.name, rp: promo_i.retail_price, pv: promo_i.point_value}
+      ]
+    }
+    |> IO.inspect(label: "seed_luckydraw_event_promo_packs")
+  end
+
   alias CommerceFront.Settings.Rank
 
   def list_ranks() do
@@ -2388,15 +2720,15 @@ defmodule CommerceFront.Settings do
     |> List.first()
   end
 
-  @doc"""
- CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
+  @doc """
+  CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
 
- sales = CommerceFront.Settings.get_sale!(627)
- placement = CommerceFront.Settings.get_placement_by_username("yokechu")
+  sales = CommerceFront.Settings.get_sale!(627)
+  placement = CommerceFront.Settings.get_placement_by_username("yokechu")
 
- CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
+  CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
 
- CommerceFront.Settings.contribute_group_sales("yokechu", -700, sales, placement)
+  CommerceFront.Settings.contribute_group_sales("yokechu", -700, sales, placement)
 
   """
 
@@ -4678,7 +5010,6 @@ defmodule CommerceFront.Settings do
                 rank_from_pv
             end
 
-
           prm = %{
             rank_id: new_rank.id,
             rank_name: new_rank.name
@@ -6736,7 +7067,7 @@ defmodule CommerceFront.Settings do
 
     user = user |> Repo.preload(:rank)
 
-    sdate = user.inserted_at  |> Timex.shift(minutes: -10)
+    sdate = user.inserted_at |> Timex.shift(minutes: -10)
     edate = sdate |> Timex.shift(months: 6)
 
     if user != nil do
@@ -6744,6 +7075,7 @@ defmodule CommerceFront.Settings do
         if Date.compare(edate, Date.utc_today()) == :lt do
           IO.inspect(sdate, label: "sdate lt")
           IO.inspect(edate, label: "edate lt")
+
           Repo.all(
             from(s in Sale,
               left_join: u in User,
@@ -6760,6 +7092,7 @@ defmodule CommerceFront.Settings do
         else
           IO.inspect(sdate, label: "sdate")
           IO.inspect(edate, label: "edate")
+
           Repo.all(
             from(s in Sale,
               left_join: u in User,
@@ -6771,7 +7104,8 @@ defmodule CommerceFront.Settings do
               group_by: [s.user_id],
               select: sum(s.subtotal)
             )
-          )|> IO.inspect(label: "res")
+          )
+          |> IO.inspect(label: "res")
           |> List.first()
         end
 
@@ -6816,7 +7150,7 @@ defmodule CommerceFront.Settings do
               where: u.username == ^user.username or s.user_id == ^user.id,
               where: not is_nil(s.merchant_id),
               where: s.status not in ^[:pending_payment, :cancelled, :refund],
-              where: s.inserted_at >= ^sdate ,
+              where: s.inserted_at >= ^sdate,
               group_by: [s.sales_person_id],
               select: sum(s.subtotal)
             )
@@ -8259,6 +8593,72 @@ defmodule CommerceFront.Settings do
           instalment_product_id: freebie.id
         })
       end
+    end
+  end
+
+  def get_all_members_sales() do
+    Sale
+    |> join(:inner, [s], u in User, on: s.user_id == u.id)
+    |> group_by([s, u], [s.user_id, u.username])
+    |> select([s, u], %{user_id: s.user_id, username: u.username, total_sales: sum(s.grand_total)})
+    |> Repo.all()
+  end
+
+  def get_parent_member_sales() do
+    Referral
+    |> join(:inner, [r], parent in User, on: parent.id == r.parent_user_id)
+    |> join(:inner, [r, parent], child in User, on: child.id == r.user_id)
+    |> join(:left, [r, parent, child], s in Sale, on: s.user_id == child.id)
+    |> group_by([_r, parent, child, _s], [parent.id, parent.username, child.id, child.username])
+    |> select([_r, parent, child, s], %{
+      user_id: parent.id,
+      username: parent.username,
+      child_user_id: child.id,
+      child_username: child.username,
+      total_sales: coalesce(sum(s.grand_total), 0.0)
+    })
+    |> Repo.all()
+  end
+
+  require IEx
+
+  def get_parent_tickets() do
+    all_members_sales = get_all_members_sales()
+    res = get_parent_member_sales()
+
+    parent_data = res |> Enum.group_by(&{&1.user_id, &1.username})
+
+    parents = Map.keys(parent_data) |> Enum.sort_by(&elem(&1, 0))
+
+    for parent <- parents do
+      parent_id = elem(parent, 0)
+      parent_username = elem(parent, 1)
+      child_data = parent_data[parent]
+      r = child_data
+
+      child_sum = r |> Enum.map(& &1.total_sales) |> Enum.sum()
+
+      check = all_members_sales |> Enum.filter(&(&1.user_id == parent_id)) |> List.first()
+
+      parent_sum =
+        if check != nil do
+          check
+          |> Map.get(:total_sales)
+        else
+          0.0
+        end
+
+      fin = %{
+        parent_sum: parent_sum,
+        child_sum: child_sum,
+        parent_id: parent_id,
+        parent_username: parent_username,
+        parent_sum_tickets: Float.round(parent_sum / 72, 0),
+        child_sum_tickets: Float.round(child_sum / 144, 0),
+        total_ticket: Float.round(parent_sum / 72 + child_sum / 144, 0)
+      }
+
+      fin
     end
   end
 end
