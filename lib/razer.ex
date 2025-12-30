@@ -1,12 +1,17 @@
 defmodule Razer do
   require Logger
-  @key Application.get_env(:commerce_front, :razer)[:key]
-  @endpoint Application.get_env(:commerce_front, :razer)[:endpoint]
-  @auth [hackney: [basic_auth: {@key, ""}]]
-  @callback_url Application.get_env(:commerce_front, :razer)[:callback]
-  @redirect_url Application.get_env(:commerce_front, :url)
-  @merchant_id Application.get_env(:commerce_front, :razer)[:mid]
-  @vkey Application.get_env(:commerce_front, :razer)[:vkey]
+
+  # NOTE:
+  # This module is often compiled without Razer config set.
+  # Avoid compile-time crashes by reading config at runtime and defaulting to safe binaries.
+  defp razor_cfg(), do: Application.get_env(:commerce_front, :razer, [])
+  defp key(), do: razor_cfg()[:key] || ""
+  defp endpoint(), do: razor_cfg()[:endpoint] || ""
+  defp callback_url(), do: razor_cfg()[:callback] || ""
+  defp redirect_url(), do: Application.get_env(:commerce_front, :url) || ""
+  defp merchant_id(), do: razor_cfg()[:mid] || ""
+  defp vkey(), do: razor_cfg()[:vkey] || ""
+  defp auth(), do: [hackney: [basic_auth: {key(), ""}]]
   require IEx
 
   def payment_page(channel, amt, reference_no) do
@@ -20,10 +25,10 @@ defmodule Razer do
       end
 
     generate_signature = fn ->
-      merchant_id = @merchant_id
-      verify_key = @vkey
+      mid = merchant_id()
+      verify_key = vkey()
 
-      str = amt <> @merchant_id <> reference_no <> @vkey
+      str = amt <> mid <> reference_no <> verify_key
       IO.puts(str)
       md5 = :crypto.hash(:md5, str) |> Base.encode16(case: :lower)
       IO.puts(md5)
@@ -45,17 +50,19 @@ defmodule Razer do
         %{fullname: z["fullname"], phone: z["phone"], username: z["fullname"], email: ""}
       end
 
-    "#{@endpoint}/RMS/pay/#{@merchant_id}/#{channel}.php?merchant_id=#{@merchant_id}&amount=#{amt}&orderid=#{reference_no}&bill_name=#{user.username}&bill_email=#{user.email}&bill_mobile=#{user.phone}&bill_desc=#{reference_no}&vcode=#{generate_signature.()}"
+    mid = merchant_id()
+
+    "#{endpoint()}/RMS/pay/#{mid}/#{channel}.php?merchant_id=#{mid}&amount=#{amt}&orderid=#{reference_no}&bill_name=#{user.username}&bill_email=#{user.email}&bill_mobile=#{user.phone}&bill_desc=#{reference_no}&vcode=#{generate_signature.()}"
   end
 
   def enquire_transaction(trx_id, amount) do
-    url = "#{@endpoint}/RMS/API/gate-query/index.php"
+    url = "#{endpoint()}/RMS/API/gate-query/index.php"
 
     generate_signature = fn ->
-      merchant_id = @merchant_id
-      verify_key = @vkey
+      mid = merchant_id()
+      verify_key = vkey()
 
-      str = trx_id <> merchant_id <> verify_key <> amount
+      str = trx_id <> mid <> verify_key <> amount
       IO.puts(str)
       md5 = :crypto.hash(:md5, str) |> Base.encode16(case: :lower)
       IO.puts(md5)
@@ -63,7 +70,7 @@ defmodule Razer do
     end
 
     params = [
-      {"domain", @merchant_id},
+      {"domain", merchant_id()},
       {"txID", trx_id},
       {"amount", amount},
       {"skey", generate_signature.()}
@@ -80,7 +87,7 @@ defmodule Razer do
              url,
              {:multipart, params},
              [{"Content-Type", "multipart/form-data"}],
-             @auth
+             auth()
            ) do
       body
       |> String.split("\n")
@@ -816,12 +823,12 @@ defmodule Razer do
   end
 
   def get_channels() do
-    url = "#{@endpoint}/RMS/API/chkstat/channel_status.php"
+    url = "#{endpoint()}/RMS/API/chkstat/channel_status.php"
 
     generate_signature = fn datetime ->
-      merchant_id = @merchant_id
-      verify_key = @vkey
-      str = datetime <> merchant_id
+      mid = merchant_id()
+      verify_key = vkey()
+      str = datetime <> mid
       IO.puts(str)
       sha256 = :crypto.mac(:hmac, :sha256, verify_key, str) |> Base.encode16(case: :lower)
       IO.puts(sha256)
@@ -847,7 +854,7 @@ defmodule Razer do
              url,
              {:multipart, params},
              [{"Content-Type", "multipart/form-data"}],
-             @auth
+             auth()
            )
            |> IO.inspect(),
          {:ok, res} <- Jason.decode(body) |> IO.inspect() do
@@ -860,10 +867,10 @@ defmodule Razer do
 
   def generate_signature(txn_amount \\ "1.5", reference_no \\ "18570") do
     # Get MerchantID and VerifyKey from environment variables
-    merchant_id = @merchant_id
-    vkey = @vkey
+    mid = merchant_id()
+    vkey = vkey()
 
-    str = "#{txn_amount}#{merchant_id}#{reference_no}#{vkey}"
+    str = "#{txn_amount}#{mid}#{reference_no}#{vkey}"
     # Log the concatenated string
     Logger.info("Concatenated String: #{str}")
 
@@ -902,8 +909,10 @@ defmodule Razer do
           "2.0"
       end
 
+    mid = merchant_id()
+
     form_data = [
-      {"MerchantID", @merchant_id},
+      {"MerchantID", mid},
       {"ReferenceNo", reference_no},
       {"TxnType", "SALS"},
       {"TxnChannel", channel},
@@ -926,7 +935,7 @@ defmodule Razer do
 
     # Make the POST request
     case HTTPoison.post(
-           "#{@endpoint}/RMS/API/Direct/1.4.0/index.php",
+           "#{endpoint()}/RMS/API/Direct/1.4.0/index.php",
            {:multipart, form_data},
            headers
          )

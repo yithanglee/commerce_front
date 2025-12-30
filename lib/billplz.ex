@@ -1,13 +1,20 @@
 defmodule Billplz do
   require Logger
-  @key Application.get_env(:commerce_front, :billplz)[:key]
-  @endpoint Application.get_env(:commerce_front, :billplz)[:endpoint]
-  @auth [hackney: [basic_auth: {@key, ""}]]
-  @callback_url Application.get_env(:commerce_front, :billplz)[:callback]
-  @redirect_url Application.get_env(:commerce_front, :url)
+
+  # NOTE:
+  # This module is frequently compiled in environments where Billplz config is not set.
+  # Using module attributes like `@endpoint Application.get_env(...)[:endpoint]` can become `nil`
+  # and cause compile-time crashes when concatenated with binaries.
+  # So we read config at runtime and provide safe defaults.
+  defp billplz_cfg(), do: Application.get_env(:commerce_front, :billplz, [])
+  defp key(), do: billplz_cfg()[:key] || ""
+  defp endpoint(), do: billplz_cfg()[:endpoint] || ""
+  defp callback_url(), do: billplz_cfg()[:callback] || ""
+  defp redirect_url(), do: Application.get_env(:commerce_front, :url) || ""
+  defp auth(), do: [hackney: [basic_auth: {key(), ""}]]
 
   def get_bill(bill_id) do
-    url = @endpoint <> "v3/bills/#{bill_id}"
+    url = endpoint() <> "v3/bills/#{bill_id}"
 
     Logger.info("[billplz] - get bill...")
 
@@ -19,7 +26,7 @@ defmodule Billplz do
            HTTPoison.get(
              url,
              [{"Content-Type", "application/json"}],
-             @auth
+             auth()
            )
            |> IO.inspect(),
          {:ok, res} <- Jason.decode(body) |> IO.inspect() do
@@ -40,7 +47,7 @@ defmodule Billplz do
         amount: amount,
         phone: phone
       }) do
-    url = @endpoint <> "v3/bills"
+    url = endpoint() <> "v3/bills"
 
     case HTTPoison.post(
            url,
@@ -50,12 +57,12 @@ defmodule Billplz do
              mobile: phone,
              name: name,
              amount: (amount * 100) |> :erlang.trunc(),
-             callback_url: @callback_url,
+             callback_url: callback_url(),
              description: description,
-             redirect_url: @redirect_url <> "/thank_you"
+             redirect_url: redirect_url() <> "/thank_you"
            }),
            [{"Content-Type", "application/json"}],
-           @auth
+           auth()
          ) do
       {:ok, resp} ->
         case Jason.decode(resp.body) do
@@ -99,7 +106,7 @@ defmodule Billplz do
   Billplz.create_open_collection("wetml7wi")
   """
   def create_open_collection(title, description, amount) do
-    url = @endpoint <> "v4/open_collections"
+    url = endpoint() <> "v4/open_collections"
 
     case HTTPoison.post(
            url,
@@ -109,7 +116,7 @@ defmodule Billplz do
              amount: (amount * 100) |> :erlang.trunc()
            }),
            [{"Content-Type", "application/json"}],
-           @auth
+           auth()
          ) do
       {:ok, resp} ->
         case Jason.decode(resp.body) do
@@ -160,7 +167,7 @@ defmodule Billplz do
   call this only every hour
   """
   def get_payment_channels() do
-    url = @endpoint <> "v4/payment_gateways"
+    url = endpoint() <> "v4/payment_gateways"
 
     with {:ok,
           %HTTPoison.Response{
@@ -170,7 +177,7 @@ defmodule Billplz do
            HTTPoison.get(
              url,
              [{"Content-Type", "application/json"}],
-             @auth
+             auth()
            ),
          {:ok, res} <- Jason.decode(body) do
       res |> save_channels
@@ -186,7 +193,7 @@ defmodule Billplz do
   https://www.billplz-sandbox.com/bills/vcs0gjwv?auto_submit=true
   """
   def direct_payment(collection_id, email, name, amount, bank_code, description) do
-    url = @endpoint <> "v3/bills"
+    url = endpoint() <> "v3/bills"
 
     case HTTPoison.post(
            url,
@@ -197,11 +204,11 @@ defmodule Billplz do
              amount: (amount * 100) |> :erlang.trunc(),
              reference_1_label: "Bank Code",
              reference_1: "BP-FKR01",
-             callback_url: @callback_url,
+             callback_url: callback_url(),
              description: description
            }),
            [{"Content-Type", "application/json"}],
-           @auth
+           auth()
          ) do
       {:ok, resp} ->
         case Jason.decode(resp.body) do
@@ -242,12 +249,12 @@ defmodule Billplz do
   end
 
   def get_collection(collection_id) do
-    url = @endpoint <> "v4/collections/#{collection_id}"
+    url = endpoint() <> "v4/collections/#{collection_id}"
 
     HTTPoison.get(
       url,
       [{"Content-Type", "application/json"}],
-      @auth
+      auth()
     )
   end
 
@@ -256,13 +263,13 @@ defmodule Billplz do
   probably only used once...
   """
   def create_collection(title) do
-    url = @endpoint <> "/v4/collections"
+    url = endpoint() <> "/v4/collections"
 
     case HTTPoison.post(
            url,
            Jason.encode!(%{title: "#{title}"}),
            [{"Content-Type", "application/json"}],
-           @auth
+           auth()
          ) do
       {:ok, resp} ->
         case Jason.decode(resp.body) do

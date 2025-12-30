@@ -22,7 +22,11 @@ config :commerce_front, CommerceFrontWeb.Endpoint,
 config :commerce_front, CommerceFront.Repo,
   username: "postgres",
   password: "postgres",
-  database: "#{System.get_env("SNAME")}_prod",
+  database: (case System.get_env("SNAME") do
+              nil -> "commerce_front_dev"
+              "" -> "commerce_front_dev"
+              sname -> "#{sname}_prod"
+            end),
   hostname: System.get_env("HOSTNAME") || "localhost",
   # hostname: "139.162.60.209",
   port: "5432",
