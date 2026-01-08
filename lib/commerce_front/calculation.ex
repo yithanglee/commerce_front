@@ -618,7 +618,7 @@ defmodule CommerceFront.Calculation do
             year: Date.utc_today().year
           })
 
-        # CommerceFront.Settings.pay_to_bonus_wallet(r)
+        CommerceFront.Settings.pay_to_bonus_wallet(r)
 
         new_matrix_item =
           matrix |> Enum.find(&(&1.rank == rank.name)) |> Map.put(:calculated, true)
