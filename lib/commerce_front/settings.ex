@@ -1324,6 +1324,193 @@ defmodule CommerceFront.Settings do
     Repo.delete(model)
   end
 
+  alias CommerceFront.Settings.CumulativePurchasePeriod
+
+  def list_cumulative_purchase_periods() do
+    Repo.all(CumulativePurchasePeriod)
+  end
+
+  def get_cumulative_purchase_period!(id) do
+    Repo.get!(CumulativePurchasePeriod, id)
+    |> Repo.preload([:freebies])
+  end
+
+  def create_cumulative_purchase_period(params \\ %{}) do
+    CumulativePurchasePeriod.changeset(%CumulativePurchasePeriod{}, params)
+    |> Repo.insert()
+    |> IO.inspect()
+  end
+
+  def update_cumulative_purchase_period(model, params) do
+    CumulativePurchasePeriod.changeset(model, params) |> Repo.update() |> IO.inspect()
+  end
+
+  def delete_cumulative_purchase_period(%CumulativePurchasePeriod{} = model) do
+    Repo.delete(model)
+  end
+
+  alias CommerceFront.Settings.CumulativePurchaseFreebie
+
+  def list_cumulative_purchase_freebies() do
+    Repo.all(CumulativePurchaseFreebie)
+  end
+
+  def get_cumulative_purchase_freebie!(id) do
+    Repo.get!(CumulativePurchaseFreebie, id)
+  end
+
+  def create_cumulative_purchase_freebie(params \\ %{}) do
+    CumulativePurchaseFreebie.changeset(%CumulativePurchaseFreebie{}, params)
+    |> Repo.insert()
+    |> IO.inspect()
+
+    sample = %{"AppRoute" => %{"1" => %{"1" => "on", "2" => "on"}}, "id" => "0"}
+    sample2 = %{"CumulativePurchaseFreebie" => %{"1" => %{"35" => "on"}}, "id" => "0"}
+
+    cumulative_purchase_period_id = Map.keys(params["CumulativePurchaseFreebie"]) |> List.first()
+
+    items = params["CumulativePurchaseFreebie"][cumulative_purchase_period_id] |> Map.keys()
+
+    Repo.delete_all(
+      from(cf in CumulativePurchaseFreebie,
+        where: cf.cumulative_purchase_period_id == ^cumulative_purchase_period_id
+      )
+    )
+
+    for item <- items do
+      params = %{
+        "cumulative_purchase_period_id" => cumulative_purchase_period_id,
+        "product_id" => item
+      }
+
+      CumulativePurchaseFreebie.changeset(%CumulativePurchaseFreebie{}, params)
+      |> Repo.insert()
+      |> IO.inspect()
+    end
+
+    {:ok, %CumulativePurchaseFreebie{id: 0}}
+  end
+
+  def update_cumulative_purchase_freebie(model, params) do
+    CumulativePurchaseFreebie.changeset(model, params) |> Repo.update() |> IO.inspect()
+  end
+
+  def delete_cumulative_purchase_freebie(%CumulativePurchaseFreebie{} = model) do
+    Repo.delete(model)
+  end
+
+  @doc """
+  Returns cumulative purchase freebies status for a user (current active period(s) only).
+
+  - `additional_rp` is optional extra RP to include (e.g. current cart subtotal),
+    so the UI can show what the user can unlock after this purchase.
+  """
+  def cumulative_purchase_freebies_status_by_username(username, additional_rp \\ 0.0) do
+    user = get_user_by_username(username)
+
+    if user == nil do
+      []
+    else
+      now = NaiveDateTime.utc_now()
+      additional_rp = additional_rp || 0.0
+
+      cumulative_purchase_periods =
+        Repo.all(
+          from(cp in CumulativePurchasePeriod,
+            where:
+              cp.start_date <= ^now and cp.end_date >= ^now and
+                cp.country_id == ^user.country_id
+          )
+        )
+
+
+
+      for cp <- cumulative_purchase_periods do
+        accumulated_sales =
+          (Repo.one(
+             from(s in Sale,
+               where:
+                 s.user_id == ^user.id and s.inserted_at >= ^cp.start_date and s.inserted_at <= ^cp.end_date,
+               select: sum(s.grand_total)
+             )
+           ) || 0.0)
+
+        projected_sales = (accumulated_sales + additional_rp) * 1.0
+
+        claimed_ids =
+          Repo.all(
+            from(si in SalesItem,
+              join: s in Sale,
+              on: s.id == si.sales_id,
+              where:
+                s.user_id == ^user.id and s.inserted_at >= ^cp.start_date and s.inserted_at <= ^cp.end_date and
+                  not is_nil(si.remarks) and ilike(si.remarks, ^"Cumulative Purchase Freebie:  Product ID%"),
+              select: si.remarks
+            )
+          )
+          |> Enum.map(fn remark ->
+            case remark do
+              "Cumulative Purchase Freebie:  Product ID " <> id_str ->
+                case Integer.parse(id_str) do
+                  {id, _} -> id
+                  _ -> nil
+                end
+
+              _ ->
+                nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+          |> MapSet.new()
+
+        freebies =
+          Repo.all(
+            from(cf in CumulativePurchaseFreebie,
+              where: cf.cumulative_purchase_period_id == ^cp.id,
+              order_by: [asc: cf.total_cumulative_rp],
+              preload: [:product]
+            )
+          )
+          |> Enum.map(fn cf ->
+            threshold = cf.total_cumulative_rp || 0.0
+            eligible = threshold <= projected_sales
+            claimed = MapSet.member?(claimed_ids, cf.id)
+            remaining = max(threshold - projected_sales, 0.0) |> Float.round(2)
+
+            %{
+              id: cf.id,
+              reward_type: cf.reward_type,
+              qty: cf.qty,
+              total_cumulative_rp: threshold,
+              eligible: eligible,
+              claimed: claimed,
+              remaining_rp: remaining,
+              product:
+                if cf.product != nil do
+                  %{
+                    id: cf.product.id,
+                    name: cf.product.name,
+                    img_url: cf.product.img_url
+                  }
+                else
+                  nil
+                end
+            }
+          end)
+
+        %{
+          cumulative_purchase_period_id: cp.id,
+          label: cp.label,
+          start_date: cp.start_date,
+          end_date: cp.end_date,
+          accumulated_sales: Float.round(accumulated_sales, 2),
+          projected_sales: Float.round(projected_sales, 2),
+          freebies: freebies
+        } |> IO.inspect(label: "freeies")
+      end
+    end
+  end
+
   @doc """
   Seed Luckydraw Event Promo Pack products (Malaysia only) and their component stock mappings.
 
@@ -1388,26 +1575,34 @@ defmodule CommerceFront.Settings do
         from(pc in CommerceFront.Settings.ProductCountry, where: pc.product_id == ^product.id)
       )
 
-      CommerceFront.Settings.ProductCountry.changeset(struct(CommerceFront.Settings.ProductCountry), %{
-        product_id: product.id,
-        country_id: country.id
-      })
+      CommerceFront.Settings.ProductCountry.changeset(
+        struct(CommerceFront.Settings.ProductCountry),
+        %{
+          product_id: product.id,
+          country_id: country.id
+        }
+      )
       |> Repo.insert()
 
       :ok
     end
 
     set_product_stocks = fn product, stock_qty_list ->
-      Repo.delete_all(from(ps in CommerceFront.Settings.ProductStock, where: ps.product_id == ^product.id))
+      Repo.delete_all(
+        from(ps in CommerceFront.Settings.ProductStock, where: ps.product_id == ^product.id)
+      )
 
       for {stock_name, qty} <- stock_qty_list do
         stock = get_or_create_stock.(stock_name)
 
-        CommerceFront.Settings.ProductStock.changeset(struct(CommerceFront.Settings.ProductStock), %{
-          product_id: product.id,
-          stock_id: stock.id,
-          qty: qty
-        })
+        CommerceFront.Settings.ProductStock.changeset(
+          struct(CommerceFront.Settings.ProductStock),
+          %{
+            product_id: product.id,
+            stock_id: stock.id,
+            qty: qty
+          }
+        )
         |> Repo.insert()
       end
 
@@ -1629,10 +1824,20 @@ defmodule CommerceFront.Settings do
     tickets = [{"Grand Convention Event Ticket", 1}, {"Lucky Draw Entry Ticket", 1}]
 
     set_product_stocks.(promo_a, [{"Portable Air Purifier", 1}, {"Hsavior", 1}] ++ tickets)
-    set_product_stocks.(promo_b, [{"Portable Air Purifier", 1}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
+
+    set_product_stocks.(
+      promo_b,
+      [{"Portable Air Purifier", 1}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets
+    )
+
     set_product_stocks.(promo_c, [{"Hsavior", 2}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
     set_product_stocks.(promo_d, [{"LutiGlo", 2}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
-    set_product_stocks.(promo_e, [{"Hsavior", 1}, {"LutiGlo", 1}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
+
+    set_product_stocks.(
+      promo_e,
+      [{"Hsavior", 1}, {"LutiGlo", 1}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets
+    )
+
     set_product_stocks.(promo_f, [{"FeCare", 2}, {"RibenTox", 1}, {"TigerM", 1}] ++ tickets)
     set_product_stocks.(promo_g, [{"RibenTox", 5}] ++ tickets)
     set_product_stocks.(promo_h, [{"TigerM", 7}] ++ tickets)
@@ -5064,6 +5269,99 @@ defmodule CommerceFront.Settings do
           })
         end
         |> IO.inspect()
+      end)
+      |> Multi.run(:cumulative_purchase_freebie, fn _repo, %{sale: sale, user: user} ->
+        # we need to check if the user accumulated sales has reached the cumulative purchase period
+        # query the cumulative purchase period by current date first  and by country_id
+        #
+        # NOTE:
+        # - `cumulative_purchase_periods.start_date/end_date` are `:naive_datetime`
+        # - Without a "claimed" check, freebies will be added again on every new sale once a user
+        #   crosses the threshold (duplicated freebies).
+
+        now = NaiveDateTime.utc_now()
+
+        cumulative_purchase_periods =
+          Repo.all(
+            from(cp in CumulativePurchasePeriod,
+              where:
+                cp.start_date <= ^now and cp.end_date >= ^now and
+                  cp.country_id == ^user.country_id
+            )
+          )
+
+        for cumulative_purchase_period <- cumulative_purchase_periods do
+          # query the cumulative purchase freebies by cumulative purchase period id
+          accumulated_sales =
+            (Repo.one(
+               from(s in Sale,
+                 where:
+                   s.user_id == ^user.id and s.inserted_at >= ^cumulative_purchase_period.start_date and
+                     s.inserted_at <= ^cumulative_purchase_period.end_date,
+                 select: sum(s.grand_total)
+               )
+             ) || 0.0)
+
+          cumulative_purchase_freebies =
+            Repo.all(
+              from(cf in CumulativePurchaseFreebie,
+                where: cf.cumulative_purchase_period_id == ^cumulative_purchase_period.id and cf.total_cumulative_rp <= ^accumulated_sales
+              )
+            )
+
+          for cumulative_purchase_freebie <- cumulative_purchase_freebies do
+            # prevent duplicating the same freebie across multiple purchases within the same period
+            remark = "Cumulative Purchase Freebie:  Product ID #{cumulative_purchase_freebie.id}"
+
+            claimed_count =
+              Repo.one(
+                from(si in SalesItem,
+                  join: s in Sale,
+                  on: s.id == si.sales_id,
+                  where:
+                    s.user_id == ^user.id and s.inserted_at >= ^cumulative_purchase_period.start_date and
+                      s.inserted_at <= ^cumulative_purchase_period.end_date and
+                      si.remarks == ^remark,
+                  select: count(si.id)
+                )
+              ) || 0
+
+            # check if the user accumulated sales has reached the cumulative purchase freebie
+            # check the freebie type and apply the freebie to the sale
+            if claimed_count > 0 do
+              nil
+            else
+              case cumulative_purchase_freebie.reward_type do
+                "product" ->
+                  product =
+                    CommerceFront.Settings.get_product!(cumulative_purchase_freebie.product_id)
+
+                  # add the product to the sale
+                  create_sales_item(%{
+                    item_pv: product.point_value,
+                    img_url: product.img_url,
+                    sales_id: sale.id,
+                    item_name: product.name,
+                    qty: cumulative_purchase_freebie.qty,
+                    item_price: product.retail_price,
+                    remarks: remark
+                  })
+
+                "product_point" ->
+                  # add the discount to the sale
+                  # Settings.create_wallet_transaction(%{
+                  #   user_id: user.id,
+                  #   amount: cumulative_purchase_freebie.product_point,
+                  #   remarks: remark,
+                  #   wallet_type: "product"
+                  # })
+                  nil
+              end
+            end
+          end
+        end
+
+        {:ok, nil}
       end)
       |> Multi.run(:member_instalment, fn _repo, %{sale: sale, user: user} ->
         sale = sale |> Repo.preload(:sales_items)
@@ -8619,8 +8917,6 @@ defmodule CommerceFront.Settings do
     })
     |> Repo.all()
   end
-
-  require IEx
 
   def get_parent_tickets() do
     all_members_sales = get_all_members_sales()

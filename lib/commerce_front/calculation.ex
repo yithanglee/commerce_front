@@ -393,33 +393,37 @@ defmodule CommerceFront.Calculation do
   def special_share_reward(user_id, pv, sale, scope \\ "register") do
     override_perc = 0.5
 
-    if pv != 0 do
-      sales_items = sale |> Repo.preload(:sales_items) |> Map.get(:sales_items)
-      # total = Enum.count(sales_items)
+    if user_id > 0 do
+      if pv != 0 do
+        sales_items = sale |> Repo.preload(:sales_items) |> Map.get(:sales_items)
+        # total = Enum.count(sales_items)
 
-      for {sales_item, index} <- sales_items |> Enum.with_index() do
-        product =
-          if scope == "merchant_checkout" do
-            CommerceFront.Settings.get_merchant_product_by_name(sales_item.item_name)
+        for {sales_item, index} <- sales_items |> Enum.with_index() do
+          product =
+            if scope == "merchant_checkout" do
+              CommerceFront.Settings.get_merchant_product_by_name(sales_item.item_name)
+            else
+              CommerceFront.Settings.get_product_by_name(sales_item.item_name)
+            end
+
+          if product.override_special_share_payout do
+            CommerceFront.Settings.create_wallet_transaction(%{
+              user_id: user_id,
+              amount: (pv * product.override_special_share_payout_perc) |> Float.round(2),
+              remarks: "sale-#{sale.id}|#{product.name}",
+              wallet_type: "direct_recruitment"
+            })
           else
-            CommerceFront.Settings.get_product_by_name(sales_item.item_name)
+            CommerceFront.Settings.create_wallet_transaction(%{
+              user_id: user_id,
+              amount: (pv * override_perc) |> Float.round(2),
+              remarks: "sale-#{sale.id}|#{product.name}",
+              wallet_type: "direct_recruitment"
+            })
           end
-
-        if product.override_special_share_payout do
-          CommerceFront.Settings.create_wallet_transaction(%{
-            user_id: user_id,
-            amount: (pv * product.override_special_share_payout_perc) |> Float.round(2),
-            remarks: "sale-#{sale.id}|#{product.name}",
-            wallet_type: "direct_recruitment"
-          })
-        else
-          CommerceFront.Settings.create_wallet_transaction(%{
-            user_id: user_id,
-            amount: (pv * override_perc) |> Float.round(2),
-            remarks: "sale-#{sale.id}|#{product.name}",
-            wallet_type: "direct_recruitment"
-          })
         end
+      else
+        {:ok, nil}
       end
     else
       {:ok, nil}
@@ -469,7 +473,8 @@ defmodule CommerceFront.Calculation do
       %{rank: "金级套餐", l1: 0.2, l2: 0.1, l3: 0.1, calculated: false, max_pv: [200, 200, 300]}
     ]
 
-    run_calc = fn {upline, index}, {calc_index, eval_matrix, {remainder_point_value, consumed_pv}} ->
+    run_calc = fn {upline, index},
+                  {calc_index, eval_matrix, {remainder_point_value, consumed_pv}} ->
       user = CommerceFront.Settings.get_user_by_username(upline.parent)
       rank = user.rank_id |> CommerceFront.Settings.get_rank!() |> IO.inspect()
 
@@ -512,7 +517,6 @@ defmodule CommerceFront.Calculation do
              matrix_item
              |> Map.get(:calculated),
            true <- calculated == false do
-
         max_pv = matrix_item |> Map.get(:max_pv, 0) |> Enum.at(calc_index - 1)
 
         # Get the first upline rank to check special case
@@ -535,25 +539,26 @@ defmodule CommerceFront.Calculation do
         IO.inspect(available_for_addon, label: "available_for_addon #{calc_index} #{rank.name}")
         IO.inspect(total_point_value, label: "total_point_value")
         IO.inspect(consumed_pv, label: "consumed_pv")
+
         {base_bonus, addon_bonus, addon_pv_used} =
           cond do
             # Gold at calc_index 3: addon for 300 PV if available >= 300
-            calc_index == 3 && rank.name == "金级套餐"  ->
+            calc_index == 3 && rank.name == "金级套餐" ->
               cond do
                 available_for_addon >= 300 ->
                   {base_bonus, 300 * 0.2, 300}
-                lv2_rank == "银级套餐" && lv2_rank == "银级套餐"  ->
+
+                lv2_rank == "银级套餐" && lv2_rank == "银级套餐" ->
                   {base_bonus, 300 * 0.2, 300}
+
                 true ->
                   {base_bonus, 0, 0}
               end
-
 
             # Gold at calc_index 2:
             # - If available PV >= 500 (meaning calc_index 3 didn't consume), addon for 500 PV
             # - Otherwise, if available PV >= 300, addon for 300 PV
             calc_index == 2 && rank.name == "金级套餐" ->
-
               if available_for_addon >= 500 do
                 # calc_index 3 didn't get anything, so addon for 500 PV
                 {base_bonus, 500 * 0.2, 500}
@@ -564,7 +569,6 @@ defmodule CommerceFront.Calculation do
                   else
                     {base_bonus, 300 * 0.2, 300}
                   end
-
                 else
                   {base_bonus, 0, 0}
                 end
@@ -573,28 +577,22 @@ defmodule CommerceFront.Calculation do
             # Silver at calc_index 2: addon for 200 PV if available >= 200
             calc_index == 2 && rank.name == "银级套餐" && available_for_addon >= 200 ->
               if lv1_rank == "银级套餐" do
-
                 {base_bonus, 0, 0}
               else
                 {base_bonus, 200 * 0.2, 0}
               end
 
-
             # Bronze/Silver at calc_index 1: addon for 200 PV if available >= 200
             calc_index == 1 && available_for_addon >= 200 ->
-
-                if lv1_rank == "金级套餐" do
-                  {base_bonus, 0, 200}
+              if lv1_rank == "金级套餐" do
+                {base_bonus, 0, 200}
+              else
+                if lv1_rank == "银级套餐" do
+                  {200 * 0.2, 200 * 0.2, 200}
                 else
-                  if lv1_rank == "银级套餐" do
-                    {200 * 0.2, 200 * 0.2, 200}
-                  else
-                    {200 * 0.2, 0, 0}
-                  end
+                  {200 * 0.2, 0, 0}
                 end
-
-
-
+              end
 
             true ->
               {base_bonus, 0, 0}

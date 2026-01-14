@@ -2914,6 +2914,89 @@ export let commerceApp_ = {
             }
 
         },
+        evalCumulativePurchaseFreebies() {
+            // Render cumulative purchase freebies hint (used in Upgrade cart UI)
+            const target = document.getElementById("cumulative_purchase_freebies");
+            if (!target) return;
+
+            const username =
+                (window.upgradeTarget || (memberApp_ && memberApp_.user && memberApp_.user.username)) || null;
+
+            if (!username) {
+                target.innerHTML = `<span class="text-secondary">n/a</span>`;
+                return;
+            }
+
+            const additional_rp = (window.currentCartSubtotalRP != null) ? window.currentCartSubtotalRP : 0.0;
+
+            phxApp_.api("get_cumulative_purchase_freebies_status", {
+                username,
+                additional_rp
+            }, null, (periods) => {
+                try {
+                    if (!periods || periods.length === 0) {
+                        target.innerHTML = `<span class="text-secondary">No active campaign</span>`;
+                        return;
+                    }
+
+                    const p = periods[0];
+                    const freebies = (p.freebies || []).filter(f => f && f.product);
+                    const unclaimed = freebies.filter(f => !f.claimed);
+                    const eligibleNow = unclaimed.filter(f => f.eligible);
+                    const upcoming = unclaimed.filter(f => !f.eligible);
+
+                    // Progress bar: current projected RP vs maximum threshold (full if all redeemed)
+                    const maxThreshold = freebies.reduce((mx, f) => {
+                        const t = (f && f.total_cumulative_rp != null) ? parseFloat(f.total_cumulative_rp) : 0.0;
+                        return (t > mx) ? t : mx;
+                    }, 0.0);
+                    const projected = (p.projected_sales != null) ? parseFloat(p.projected_sales) : 0.0;
+
+                    let progressPerc = 0;
+                    if (unclaimed.length === 0 && freebies.length > 0) {
+                        progressPerc = 100;
+                    } else if (maxThreshold > 0) {
+                        progressPerc = Math.min(100, Math.max(0, (projected / maxThreshold) * 100));
+                    }
+                    const progressLabel = (maxThreshold > 0)
+                        ? `${projected.toFixed(2)} / ${maxThreshold.toFixed(2)} RP`
+                        : `${projected.toFixed(2)} RP`;
+
+                    let lines = [];
+
+                    if (eligibleNow.length > 0) {
+                        const items = eligibleNow.slice(0, 3).map(f => `${f.product.name} x${f.qty || 1}`);
+                        lines.push(`<div class="text-success">Eligible now: ${items.join(", ")}</div>`);
+                    }
+
+                    if (upcoming.length > 0) {
+                        const next = upcoming[0];
+                        const need = (next.remaining_rp != null) ? next.remaining_rp : 0;
+                        lines.push(`<div class="text-secondary">Next: need <span class="fw-bold">${need}</span> RP to get ${next.product.name} x${next.qty || 1}</div>`);
+                    }
+
+                    if (lines.length === 0) {
+                        lines.push(`<span class="text-secondary">All rewards claimed</span>`);
+                    }
+
+                    const barColor = (progressPerc >= 100) ? "bg-success" : "bg-info";
+                    const progressHtml = `
+                      <div class="w-100">
+                        <div class="progress" style="height: 6px;">
+                          <div class="progress-bar ${barColor}" role="progressbar" style="width: ${progressPerc.toFixed(0)}%;"
+                            aria-valuenow="${progressPerc.toFixed(0)}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="text-secondary text-end" style="font-size: 0.75rem;">${progressLabel}</div>
+                      </div>
+                    `;
+
+                    target.innerHTML = `<div class="d-flex flex-column align-items-end gap-1">${progressHtml}${lines.join("")}</div>`;
+                } catch (e) {
+                    console.error(e);
+                    target.innerHTML = `<span class="text-secondary">n/a</span>`;
+                }
+            })
+        },
         cartItems() {
 
 
@@ -3182,6 +3265,10 @@ export let commerceApp_ = {
                 shipping_fee = 0
             }
 
+            // used by evalCumulativePurchaseFreebies() to include current cart subtotal in eligibility
+            window.currentCartSubtotalRP = subtotal;
+            const showCumulativeFreebies = $("cartItems").attr("cumulativeFreebies") != null;
+
 
 
 
@@ -3206,6 +3293,16 @@ export let commerceApp_ = {
             if (is_merchant) {
                 elr = ''
                 tpv = `RP received`
+            }
+            if (!is_merchant && showCumulativeFreebies) {
+                elr = elr + `
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-secondary">Cumulative Freebies</span>
+                    <span class="me-4 text-end text-sm" id="cumulative_purchase_freebies">
+                      <span class="text-secondary">Loading...</span>
+                    </span>
+                  </div>
+                `
             }
             if (!showRP) {
                 crp = `MYR <span class="format-float">` + (subtotal * phxApp_.chosen_country_id_.conversion) + ``
@@ -3241,6 +3338,9 @@ export let commerceApp_ = {
  
 
         `)
+            if (showCumulativeFreebies) {
+                try { this.evalCumulativePurchaseFreebies(); } catch (e) { console.error(e) }
+            }
 
             var user = memberApp_.user,
                 wallets = []
@@ -3425,6 +3525,9 @@ export let commerceApp_ = {
 
 
           `)
+                if (showCumulativeFreebies) {
+                    try { commerceApp_.components.evalCumulativePurchaseFreebies(); } catch (e) { console.error(e) }
+                }
 
 
 
@@ -3456,6 +3559,9 @@ export let commerceApp_ = {
 
 
                     `)
+                    if (showCumulativeFreebies) {
+                        try { commerceApp_.components.evalCumulativePurchaseFreebies(); } catch (e) { console.error(e) }
+                    }
 
                 }
 

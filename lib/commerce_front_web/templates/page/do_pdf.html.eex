@@ -53,7 +53,7 @@ table td, table th {
   <title>HAHO ·
     <%= @title %>
   </title>
-  <%  
+  <%
   currency = "MYR"
   conversion_rate =
   case currency do
@@ -61,18 +61,26 @@ table td, table th {
       5
       _ ->
       1
-  end 
+  end
   user_deet =  @sale.registration_details |> Jason.decode! |> Map.get("user") |> IO.inspect
-
+  email =
+  cond do
+    user_deet  |> Map.get("email" ) != nil ->
+      email = user_deet  |> Map.get("email" )
+    @merchant != nil ->
+      @merchant.company_email || "n/a"
+    true ->
+      "n/a"
+  end
   payment = user_deet  |> Map.get("payment")
 
   drp_amount = case Map.get(payment, "drp", "0") |> Float.parse do
     {amount, _suffix} ->
-    amount 
+    amount
     _ ->
-    0.00 
+    0.00
   end
-  rp_amount = @sale.grand_total - drp_amount 
+  rp_amount = @sale.grand_total - drp_amount
   shipping_fee = @sale.shipping_fee
     chunk_no = 10
     chunked_orders = @order_lines |> Enum.chunk_every(chunk_no) |> Enum.with_index() %>
@@ -82,7 +90,7 @@ table td, table th {
     <% else  %>
     <div class="justify-center " style="page-break-after: always;">
       <% end %>
-      <%= render("header.html", email: user_deet  |> Map.get("email", @merchant.company_email), merchant: @merchant, username: @sale.user.username, title: @title, conn: @conn, sales: @sale, payment: user_deet  |> Map.get("payment"), shipping: user_deet |> Map.get("shipping")) %>
+      <%= render("header.html", email: email , merchant: @merchant, username: @sale.user.username, title: @title, conn: @conn, sales: @sale, payment: user_deet  |> Map.get("payment"), shipping: user_deet |> Map.get("shipping")) %>
       <center class="" style="">
         <table class=" " style="width: 85%;">
           <thead>
@@ -109,7 +117,7 @@ table td, table th {
               </td>
             </tr>
             <% end %>
-      
+
 
           </tbody>
         </table>
