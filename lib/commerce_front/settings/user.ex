@@ -27,7 +27,8 @@ defmodule CommerceFront.Settings.User do
     has_one(:merchant, CommerceFront.Settings.Merchant)
     # field(:placement, :string, virtual: true)
 
-    field(:country_id, :integer)
+    # field(:country_id, :integer)
+    belongs_to(:country, CommerceFront.Settings.Country)
     field(:is_stockist, :boolean, default: false)
     has_one(:placement, CommerceFront.Settings.Placement)
     field(:stockist_user_id, :integer)

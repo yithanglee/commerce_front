@@ -1423,17 +1423,16 @@ defmodule CommerceFront.Settings do
           )
         )
 
-
-
       for cp <- cumulative_purchase_periods do
         accumulated_sales =
-          (Repo.one(
-             from(s in Sale,
-               where:
-                 s.user_id == ^user.id and s.inserted_at >= ^cp.start_date and s.inserted_at <= ^cp.end_date,
-               select: sum(s.grand_total)
-             )
-           ) || 0.0)
+          Repo.one(
+            from(s in Sale,
+              where:
+                s.user_id == ^user.id and s.inserted_at >= ^cp.start_date and
+                  s.inserted_at <= ^cp.end_date,
+              select: sum(s.grand_total)
+            )
+          ) || 0.0
 
         projected_sales = (accumulated_sales + additional_rp) * 1.0
 
@@ -1443,8 +1442,10 @@ defmodule CommerceFront.Settings do
               join: s in Sale,
               on: s.id == si.sales_id,
               where:
-                s.user_id == ^user.id and s.inserted_at >= ^cp.start_date and s.inserted_at <= ^cp.end_date and
-                  not is_nil(si.remarks) and ilike(si.remarks, ^"Cumulative Purchase Freebie:  Product ID%"),
+                s.user_id == ^user.id and s.inserted_at >= ^cp.start_date and
+                  s.inserted_at <= ^cp.end_date and
+                  not is_nil(si.remarks) and
+                  ilike(si.remarks, ^"Cumulative Purchase Freebie:  Product ID%"),
               select: si.remarks
             )
           )
@@ -1506,7 +1507,8 @@ defmodule CommerceFront.Settings do
           accumulated_sales: Float.round(accumulated_sales, 2),
           projected_sales: Float.round(projected_sales, 2),
           freebies: freebies
-        } |> IO.inspect(label: "freeies")
+        }
+        |> IO.inspect(label: "freeies")
       end
     end
   end
@@ -4094,14 +4096,16 @@ defmodule CommerceFront.Settings do
               0
             else
               _ ->
-                if params["user"]["shipping"]["state"] in ["Sabah", "Sarawak", "Labuan"] do
-                  Float.ceil(total_rp / 200) * 4
+                # if params["user"]["shipping"]["state"] in ["Sabah", "Sarawak", "Labuan"] do
+                #   Float.ceil(total_rp / 200) * 4
+
+                # else
+
+                # end
+                if total_rp >= 36 do
+                  shipping_fee
                 else
-                  if total_rp >= 36 do
-                    shipping_fee
-                  else
-                    2
-                  end
+                  2
                 end
             end
           end
@@ -4647,8 +4651,11 @@ defmodule CommerceFront.Settings do
                     0
                   end
 
+                # 2026/3/3 ; drp usage cant more than 80% of total subtotal
+
                 with true <- :erlang.trunc(drp.total) >= form_drp,
                      true <- (rp.total >= sale.grand_total - form_drp) |> IO.inspect(),
+                     true <- form_drp <= (subtotal * 0.8) |> IO.inspect(label: "drp_usage"),
                      fin_amt <- sale.total_point_value - form_drp do
                   fin_amt =
                     if fin_amt < 0 do
@@ -5293,19 +5300,22 @@ defmodule CommerceFront.Settings do
         for cumulative_purchase_period <- cumulative_purchase_periods do
           # query the cumulative purchase freebies by cumulative purchase period id
           accumulated_sales =
-            (Repo.one(
-               from(s in Sale,
-                 where:
-                   s.user_id == ^user.id and s.inserted_at >= ^cumulative_purchase_period.start_date and
-                     s.inserted_at <= ^cumulative_purchase_period.end_date,
-                 select: sum(s.grand_total)
-               )
-             ) || 0.0)
+            Repo.one(
+              from(s in Sale,
+                where:
+                  s.user_id == ^user.id and
+                    s.inserted_at >= ^cumulative_purchase_period.start_date and
+                    s.inserted_at <= ^cumulative_purchase_period.end_date,
+                select: sum(s.grand_total)
+              )
+            ) || 0.0
 
           cumulative_purchase_freebies =
             Repo.all(
               from(cf in CumulativePurchaseFreebie,
-                where: cf.cumulative_purchase_period_id == ^cumulative_purchase_period.id and cf.total_cumulative_rp <= ^accumulated_sales
+                where:
+                  cf.cumulative_purchase_period_id == ^cumulative_purchase_period.id and
+                    cf.total_cumulative_rp <= ^accumulated_sales
               )
             )
 
@@ -5319,7 +5329,8 @@ defmodule CommerceFront.Settings do
                   join: s in Sale,
                   on: s.id == si.sales_id,
                   where:
-                    s.user_id == ^user.id and s.inserted_at >= ^cumulative_purchase_period.start_date and
+                    s.user_id == ^user.id and
+                      s.inserted_at >= ^cumulative_purchase_period.start_date and
                       s.inserted_at <= ^cumulative_purchase_period.end_date and
                       si.remarks == ^remark,
                   select: count(si.id)

@@ -74,6 +74,33 @@ defmodule CommerceFrontWeb.ApiController do
 
     res =
       case params["scope"] do
+
+        "model_get_by" ->
+          map =
+            params
+            |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
+            |> Map.new()
+
+          CommerceFront.Utility.get_by(
+            params["model"],
+            map
+            |> Map.drop([
+              :model,
+              :scope
+            ])
+          )
+          |> BluePotion.sanitize_struct()
+
+        "datatable" ->
+          CommerceFront.Utility.build_datatable_query(
+            CommerceFront.Utility.modulize_name(params["model"]),
+            params,
+            params
+            |> Map.drop([
+              :model,
+              :scope
+            ])
+          )
         "travel_fund_qualifiers" ->
           Settings.travel_fund_qualifier(
             params["year"] |> String.to_integer(),

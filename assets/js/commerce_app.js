@@ -212,7 +212,7 @@ export let commerceApp_ = {
         // callback function to call this render
         var list = ["merchantProducts", "merchantproduct", "merchantProfile", "merchant", "recruit", "topup", "country",
             "light", "userProfile", "wallet", "announcement", "products", "product",
-            "rewardList", "rewardSummary","mcart", "cart", "cartItems", "salesItems", "upgradeTarget", "upgradeTargetMerchant", "sponsorTarget", "stockistTarget", "choosePayment"
+            "rewardList", "rewardSummary", "mcart", "cart", "cartItems", "salesItems", "upgradeTarget", "upgradeTargetMerchant", "sponsorTarget", "stockistTarget", "choosePayment"
         ]
 
         list.forEach((v, i) => {
@@ -455,7 +455,7 @@ export let commerceApp_ = {
                 })
 
                 $("[aria-country]").unbind()
-                $("[aria-country]").click(function() {
+                $("[aria-country]").click(function () {
                     var country_id = $(this).attr("aria-country"),
                         name = $(this).attr("aria-name")
                     phxApp_.chosen_country_id_ = country_id
@@ -505,7 +505,7 @@ export let commerceApp_ = {
                     // } else {
 
                     phxApp_.navigateTo("/home")
-                        // }
+                    // }
                 })
 
             }
@@ -572,7 +572,7 @@ export let commerceApp_ = {
                     var id = $(dom).attr("mproduct-id")
                     var zdata = phxApp_.api("get_mproduct", {
                         id: id
-                    }, () => {}, (data) => {
+                    }, () => { }, (data) => {
                         var check = commerceApp_.mcart_.filter((v, i) => {
                             return v.merchant_id == data.merchant_id
                         })
@@ -792,124 +792,124 @@ export let commerceApp_ = {
 
             phxApp.createForm(merc,
                 null, [{
-                        name: 'General',
-                        list: [
+                    name: 'General',
+                    list: [
 
-                            'id',
-                            'user_id',
-                            'name', {
-                                label: 'merchant_category_id',
-                                alt_name: 'Business Category',
-                                alt_class: "col-12",
-                                selection: merchant_categorySourcex.allData
+                        'id',
+                        'user_id',
+                        'name', {
+                            label: 'merchant_category_id',
+                            alt_name: 'Business Category',
+                            alt_class: "col-12",
+                            selection: merchant_categorySourcex.allData
+                        }, {
+                            alt_name: 'Merchant Logo',
+                            label: 'img_url',
+                            upload: true
+                        }, {
+                            label: 'description',
+                            binary: true,
+                            alt_class: "col-12"
+                        },
+
+                        {
+                            label: 'commission_perc',
+                            alt_name: 'Percentage Contribution',
+                            selection: [{
+                                id: 0.05,
+                                name: "5%"
                             }, {
-                                alt_name: 'Merchant Logo',
-                                label: 'img_url',
-                                upload: true
+                                id: 0.1,
+                                name: "10%"
                             }, {
-                                label: 'description',
-                                binary: true,
-                                alt_class: "col-12"
-                            },
-
-                            {
-                                label: 'commission_perc',
-                                alt_name: 'Percentage Contribution',
-                                selection: [{
-                                    id: 0.05,
-                                    name: "5%"
-                                }, {
-                                    id: 0.1,
-                                    name: "10%"
-                                }, {
-                                    id: 0.15,
-                                    name: "15%"
-                                }, {
-                                    id: 0.2,
-                                    name: "20%"
-                                }, {
-                                    id: 0.22,
-                                    name: "25%"
-                                }, {
-                                    id: 0.3,
-                                    name: "30%"
-                                }, {
-                                    id: 0.35,
-                                    name: "35%"
-                                }, {
-                                    id: 0.4,
-                                    name: "40%"
-                                }, {
-                                    id: 0.45,
-                                    name: "45%"
-                                }, {
-                                    id: 0.5,
-                                    name: "50%"
-                                }]
-                            },
-
-                        ]
-                    }, {
-                        name: 'CompanyDetails',
-                        list: [
-
-                            {
-                                label: 'company_address',
-                                alt_name: "Address",
-                                alt_class: "col-12",
-                                binary: true
+                                id: 0.15,
+                                name: "15%"
                             }, {
-                                label: 'company_email',
-                                alt_name: "Email",
-                                alt_class: "col-12"
+                                id: 0.2,
+                                name: "20%"
                             }, {
-                                label: 'company_phone',
-                                alt_name: "Phone",
-                                alt_class: "col-12"
-                            },
-
-
-
-                            {
-                                label: 'company_reg_no',
-                                alt_name: "Reg No",
-                                alt_class: "col-12"
+                                id: 0.22,
+                                name: "25%"
                             }, {
-                                label: 'company_ssm_image_url',
-                                alt_name: "SSM Image",
-                                alt_class: "col-12",
-                                upload: true
-                            },
-
-
-                        ]
-                    }, {
-                        name: 'BankDetails',
-                        list: [
-
-                            {
-                                label: 'bank_name',
-                                alt_name: "Bank Name",
-                                alt_class: "col-12"
+                                id: 0.3,
+                                name: "30%"
                             }, {
-                                label: 'bank_account_holder',
-                                alt_name: "Bank Account Holder",
-                                alt_class: "col-12"
+                                id: 0.35,
+                                name: "35%"
                             }, {
-                                label: 'bank_account_no',
-                                alt_name: "Account Number",
-                                alt_class: "col-12"
-                            },
+                                id: 0.4,
+                                name: "40%"
+                            }, {
+                                id: 0.45,
+                                name: "45%"
+                            }, {
+                                id: 0.5,
+                                name: "50%"
+                            }]
+                        },
 
-                        ]
-                    }
+                    ]
+                }, {
+                    name: 'CompanyDetails',
+                    list: [
+
+                        {
+                            label: 'company_address',
+                            alt_name: "Address",
+                            alt_class: "col-12",
+                            binary: true
+                        }, {
+                            label: 'company_email',
+                            alt_name: "Email",
+                            alt_class: "col-12"
+                        }, {
+                            label: 'company_phone',
+                            alt_name: "Phone",
+                            alt_class: "col-12"
+                        },
 
 
-                ],
+
+                        {
+                            label: 'company_reg_no',
+                            alt_name: "Reg No",
+                            alt_class: "col-12"
+                        }, {
+                            label: 'company_ssm_image_url',
+                            alt_name: "SSM Image",
+                            alt_class: "col-12",
+                            upload: true
+                        },
+
+
+                    ]
+                }, {
+                    name: 'BankDetails',
+                    list: [
+
+                        {
+                            label: 'bank_name',
+                            alt_name: "Bank Name",
+                            alt_class: "col-12"
+                        }, {
+                            label: 'bank_account_holder',
+                            alt_name: "Bank Account Holder",
+                            alt_class: "col-12"
+                        }, {
+                            label: 'bank_account_no',
+                            alt_name: "Account Number",
+                            alt_class: "col-12"
+                        },
+
+                    ]
+                }
+
+
+            ],
 
                 (j) => {
                     console.info(j)
-                        // phxApp_.user.merchant = j
+                    // phxApp_.user.merchant = j
                     memberApp_.extendUser()
                     phxApp.navigateTo("/merchant_profile")
                 }
@@ -1117,7 +1117,7 @@ export let commerceApp_ = {
 
             var razerList = phxApp.api("razer_list", {}),
                 channels =
-                Object.keys(razerList),
+                    Object.keys(razerList),
                 sections = [];
 
 
@@ -1194,7 +1194,7 @@ export let commerceApp_ = {
 
 
 
-            $(".use-channel").click(function() {
+            $(".use-channel").click(function () {
                 var channel = $(this).attr("aria-channel-label")
                 $(".use-channel").removeClass("border border-primary rounded")
                 $(this).addClass("border border-primary rounded")
@@ -1314,7 +1314,7 @@ export let commerceApp_ = {
 
             var razerList = phxApp.api("razer_list", {}),
                 channels =
-                Object.keys(razerList),
+                    Object.keys(razerList),
                 sections = [];
 
 
@@ -1376,22 +1376,22 @@ export let commerceApp_ = {
 
 
                 phxApp.createForm({
-                        id: "0",
-                        user_id: phxApp.user.id
-                    },
+                    id: "0",
+                    user_id: phxApp.user.id
+                },
                     null, ['id', {
-                            label: 'amount',
-                            alt_name: 'Amount (RP)',
-                            alt_class: "col-12"
-                        }, {
-                            label: 'remarks',
-                            alt_name: 'Description',
-                            alt_class: "col-12"
-                        }, {
-                            label: 'payment-placeholder',
-                            alt_name: 'Choose Payment',
-                            alt_class: "col-12",
-                            placeholder: `
+                        label: 'amount',
+                        alt_name: 'Amount (RP)',
+                        alt_class: "col-12"
+                    }, {
+                        label: 'remarks',
+                        alt_name: 'Description',
+                        alt_class: "col-12"
+                    }, {
+                        label: 'payment-placeholder',
+                        alt_name: 'Choose Payment',
+                        alt_class: "col-12",
+                        placeholder: `
 
 
                 <div id="payment-placeholder">
@@ -1431,30 +1431,30 @@ export let commerceApp_ = {
                 </div>
 
             `
-                        },
+                    },
 
-                        {
-                            label: 'payment_method',
-                            selection: [{
-                                id: 'fpx',
-                                name: 'FPX'
-                            }, {
-                                id: 'bank in slip',
-                                name: 'BANK IN SLIP'
-                            }],
-                            alt_class: "d-none"
+                    {
+                        label: 'payment_method',
+                        selection: [{
+                            id: 'fpx',
+                            name: 'FPX'
                         }, {
-                            label: 'img_url',
-                            upload: true,
-                            alt_class: "d-none upload-display"
-                        }, {
-                            label: 'bank',
-                            data: 'bank',
-                            hidden: true
-                        },
-                        'user_id'
+                            id: 'bank in slip',
+                            name: 'BANK IN SLIP'
+                        }],
+                        alt_class: "d-none"
+                    }, {
+                        label: 'img_url',
+                        upload: true,
+                        alt_class: "d-none upload-display"
+                    }, {
+                        label: 'bank',
+                        data: 'bank',
+                        hidden: true
+                    },
+                    'user_id'
 
-                    ],
+                ],
 
                     (j) => {
                         console.info(j)
@@ -1469,7 +1469,7 @@ export let commerceApp_ = {
                                 });
 
                                 // Append input elements for each data key-value pair to the form
-                                $.each(data, function(key, value) {
+                                $.each(data, function (key, value) {
                                     $('<input>', {
                                         'type': 'hidden',
                                         'name': key,
@@ -1511,7 +1511,7 @@ export let commerceApp_ = {
                     $("input[name='WalletTopup[remarks]']").val("MYR " + valu * 5)
                 })
 
-                $(".use-channel").click(function() {
+                $(".use-channel").click(function () {
                     var channel = $(this).attr("aria-channel-label")
                     $(".use-channel").removeClass("border border-primary rounded")
                     $(this).addClass("border border-primary rounded")
@@ -1575,7 +1575,7 @@ export let commerceApp_ = {
                     preloads: ["user", "payment"],
                     additional_join_statements: [{
                         user: "user"
-                    }, ],
+                    },],
                     additional_search_queries: [
                         "a.user_id=" + phxApp.user.id
                     ],
@@ -1642,7 +1642,7 @@ export let commerceApp_ = {
                     fnParams: {
 
                     }
-                }, ],
+                },],
                 tableSelector: "#" + random_id
             })
             wallet_topupSource.load(random_id, "#tab2")
@@ -1703,7 +1703,7 @@ export let commerceApp_ = {
                     autoClose: false
                 })
                 $("[aria-country]").unbind()
-                $("[aria-country]").click(function() {
+                $("[aria-country]").click(function () {
                     var country_id = $(this).attr("aria-country"),
                         name = $(this).attr("aria-name")
                     phxApp_.chosen_country_id_ = country_id
@@ -1803,17 +1803,17 @@ export let commerceApp_ = {
 
 
                     phxApp_.api("get_accumulated_sales", {
-                            show_instalment: true,
-                            parent_id: memberApp_.user.id,
-                            show_rank: true,
-                            username: $("[name='upgrade[username]']").val(),
+                        show_instalment: true,
+                        parent_id: memberApp_.user.id,
+                        show_rank: true,
+                        username: $("[name='upgrade[username]']").val(),
 
-                        }, () => {
-                            window.upgradeTarget = memberApp_.user.username
-                            $("input[name='user[upgrade]']").val(window.upgradeTarget)
-                            $(".selectUser").addClass("disabled")
+                    }, () => {
+                        window.upgradeTarget = memberApp_.user.username
+                        $("input[name='user[upgrade]']").val(window.upgradeTarget)
+                        $(".selectUser").addClass("disabled")
 
-                        },
+                    },
                         (res) => {
                             phxApp_.notify("User verified!")
                             $(".selectUser").removeClass("disabled")
@@ -1924,17 +1924,17 @@ export let commerceApp_ = {
 
 
                     phxApp_.api("get_accumulated_sales_merchant", {
-                            show_instalment: true,
-                            parent_id: memberApp_.user.id,
-                            show_rank: true,
-                            username: $("[name='upgrade[username]']").val(),
+                        show_instalment: true,
+                        parent_id: memberApp_.user.id,
+                        show_rank: true,
+                        username: $("[name='upgrade[username]']").val(),
 
-                        }, () => {
-                            window.upgradeTarget = memberApp_.user.username
-                            $("input[name='user[upgrade]']").val(window.upgradeTarget)
-                            $(".selectUser").addClass("disabled")
+                    }, () => {
+                        window.upgradeTarget = memberApp_.user.username
+                        $("input[name='user[upgrade]']").val(window.upgradeTarget)
+                        $(".selectUser").addClass("disabled")
 
-                        },
+                    },
                         (res) => {
                             phxApp_.notify("User verified!")
                             $(".selectUser").removeClass("disabled")
@@ -2009,7 +2009,7 @@ export let commerceApp_ = {
             window.sponsorTarget
             if (window.sponsorTarget == null) {
                 window.sponsorTarget = memberApp_.user.username
-            } else {}
+            } else { }
             $("input[name='user[sponsor]']").val('')
             $("sponsorTarget").customHtml(`<span>for: <span id="sponsorTarget">` + window.sponsorTarget + `</span>
        <a class="ms-4" href="javascript:void(0);" aria-sponsor=true> <i class="fa fa-edit"></i> Change</a> </span>`)
@@ -2036,16 +2036,16 @@ export let commerceApp_ = {
 
 
                     phxApp_.api("get_accumulated_sales", {
-                            parent_id: memberApp_.user.id,
-                            show_rank: true,
-                            username: $("[name='sponsor[username]']").val(),
+                        parent_id: memberApp_.user.id,
+                        show_rank: true,
+                        username: $("[name='sponsor[username]']").val(),
 
-                        }, () => {
-                            window.sponsorTarget = memberApp_.user.username
-                            $("input[name='user[sponsor]']").val(window.sponsorTarget)
-                            $(".selectUser").addClass("disabled")
+                    }, () => {
+                        window.sponsorTarget = memberApp_.user.username
+                        $("input[name='user[sponsor]']").val(window.sponsorTarget)
+                        $(".selectUser").addClass("disabled")
 
-                        },
+                    },
                         (res) => {
 
                             $(".selectUser").removeClass("disabled")
@@ -2061,7 +2061,7 @@ export let commerceApp_ = {
 
                             if (res[3].is_downline) {
                                 phxApp_.notify("User verified!")
-                                    // $(".to-upgrade").removeClass("disabled")
+                                // $(".to-upgrade").removeClass("disabled")
                             } else {
                                 if ($("input[name='sponsor[username]']").val() == memberApp_.user.username) {
                                     phxApp_.notify("User verified!")
@@ -2103,7 +2103,7 @@ export let commerceApp_ = {
             window.stockistTarget
             if (window.stockistTarget == null) {
                 window.stockistTarget = memberApp_.user.username
-            } else {}
+            } else { }
             $("input[name='user[stockist_user_id]']").val('')
             $("stockistTarget").customHtml(`<span>for: <span id="stockistTarget">` + window.stockistTarget + `</span>
        <a class="ms-4" href="javascript:void(0);" aria-stockist=true> <i class="fa fa-edit"></i> Change</a> </span>`)
@@ -2130,21 +2130,21 @@ export let commerceApp_ = {
 
 
                     phxApp_.api("get_stockist", {
-                            parent_id: memberApp_.user.id,
-                            show_rank: true,
-                            username: $("[name='sponsor[username]']").val(),
+                        parent_id: memberApp_.user.id,
+                        show_rank: true,
+                        username: $("[name='sponsor[username]']").val(),
 
-                        }, () => {
-                            window.stockistTarget = memberApp_.user.username
-                            $("input[name='user[stockist_user_id]']").val(null)
+                    }, () => {
+                        window.stockistTarget = memberApp_.user.username
+                        $("input[name='user[stockist_user_id]']").val(null)
 
-                            $(".selectUser").addClass("disabled")
+                        $(".selectUser").addClass("disabled")
 
-                        },
+                    },
                         (res) => {
 
                             $(".selectUser").removeClass("disabled")
-                                // $(".pv-info").customHtml(`Accumulated sales PV: ` + res[0] + ` | Rank: ` + res[1])
+                            // $(".pv-info").customHtml(`Accumulated sales PV: ` + res[0] + ` | Rank: ` + res[1])
 
                             if (res[1].is_stockist) {
                                 window.stockistTargetData = res[2]
@@ -2564,7 +2564,7 @@ export let commerceApp_ = {
 
         `)
 
-            $(".approve-sale").click(function() {
+            $(".approve-sale").click(function () {
                 var id = $(this).attr("aria-id")
                 phxApp_.modal({
                     selector: "#mySubModal",
@@ -2687,7 +2687,12 @@ export let commerceApp_ = {
                 } else {
 
                     if (["Sabah", "Sarawak", "Labuan"].includes(window.selectedState)) {
-                        s = Math.ceil(subtotal / 200) * 4
+                        // s = Math.ceil(subtotal / 200) * 4
+                        if (subtotal >= 36) {
+                            s = 0
+                        } else {
+                            s = 2
+                        }
                     } else {
                         if (is_merchant) {
                             s = Math.ceil(subtotal / 200) * 2
@@ -2789,7 +2794,7 @@ export let commerceApp_ = {
             `,
                             header: "Pick Up Points"
                         })
-                        $("[aria-address]").click(function() {
+                        $("[aria-address]").click(function () {
                             var id = $(this).attr("aria-address")
 
                             var pup = phxApp_.pick_up_points.filter((v, i) => {
@@ -2885,7 +2890,7 @@ export let commerceApp_ = {
             `,
                                 header: "Change address"
                             })
-                            $("[aria-address]").click(function() {
+                            $("[aria-address]").click(function () {
                                 var id = $(this).attr("aria-address")
                                 window.choosenAddress = id
                                 var address = phxApp_.addresses.filter((v, i) => {
@@ -3282,12 +3287,12 @@ export let commerceApp_ = {
                     <span class="text-info me-4"><span class="format-integer">` + eligible_rank + `</span></span>
                   </div>
 
-    `,
+                `,
                 tpv = `
 
-      Total PV
+                Total PV
 
-    `,
+                `,
                 crp = `RP <span class="format-float">` + subtotal + ``
 
             if (is_merchant) {
@@ -3359,7 +3364,7 @@ export let commerceApp_ = {
 
 
             function appendWalletAttr() {
-                if (wallets.length == 0) {} else {
+                if (wallets.length == 0) { } else {
                     $("wallet").each((i, v) => {
                         var check = wallets.filter((wv, wi) => {
                             return wv.wallet_type == "direct_recruitment"
@@ -3396,7 +3401,7 @@ export let commerceApp_ = {
                                     }, 0)
 
 
-
+                                    $("#drp_payment").attr("max", subtotal * 0.8)
                                     $("#drp_payment").attr("min", Math.round(subtotal2))
                                     $("#drp_payment").attr("value", Math.round(subtotal2))
                                 } else {
@@ -3407,7 +3412,7 @@ export let commerceApp_ = {
                                 }
 
                             }
-                        } else {}
+                        } else { }
                     })
                 }
             }
@@ -4302,7 +4307,7 @@ export let commerceApp_ = {
                 <i class="fa fa-lightbulb far"></i>
               </div>
         `)
-                // $("html").attr("data-bs-theme", localStorage.get("data-bs-theme"))
+            // $("html").attr("data-bs-theme", localStorage.get("data-bs-theme"))
 
             $(".light").unbind()
             $(".light").on("click", () => {
@@ -4345,8 +4350,8 @@ export let commerceApp_ = {
 
                     console.info(check)
                     if (data.countries.map((vv, ii) => {
-                            return vv.id
-                        }).includes(parseInt(commerceApp_.first_cart_country_id))) {
+                        return vv.id
+                    }).includes(parseInt(commerceApp_.first_cart_country_id))) {
 
                         commerceApp_.addItem_(data)
                         commerceApp_.components["updateCart"]()
@@ -4568,7 +4573,7 @@ export let commerceApp_ = {
                 })
 
                 $("[aria-country]").unbind()
-                $("[aria-country]").click(function() {
+                $("[aria-country]").click(function () {
                     var country_id = $(this).attr("aria-country"),
                         name = $(this).attr("aria-name")
                     phxApp_.chosen_country_id_ = country_id
@@ -4588,7 +4593,7 @@ export let commerceApp_ = {
 
                     $("#mySubModal").modal('hide')
                     commerceApp_.components["country"]()
-                        // commerceApp_.components["products"]()
+                    // commerceApp_.components["products"]()
 
                     if (pageParams.share_code != null) {
                         // commerceApp_.components["products"]()
@@ -4639,8 +4644,8 @@ export let commerceApp_ = {
 
                         console.log(check)
                         if (data.countries.map((vv, ii) => {
-                                return vv.id
-                            }).includes(parseInt(commerceApp_.first_cart_country_id))) {
+                            return vv.id
+                        }).includes(parseInt(commerceApp_.first_cart_country_id))) {
 
                             commerceApp_.selectedInstalment = data
                             commerceApp_.addItem_(data)
@@ -4649,28 +4654,28 @@ export let commerceApp_ = {
 
 
                             phxApp_.notify("Added " + data.name, {
-                                    delay: 2000,
-                                    type: "success",
-                                    placement: {
-                                        from: "top",
-                                        align: "center"
-                                    }
-                                })
-                                // phxApp_.toast({ content: `<div class=""><ul class="">` + $(".ac").html() + `</ul></div>` })
+                                delay: 2000,
+                                type: "success",
+                                placement: {
+                                    from: "top",
+                                    align: "center"
+                                }
+                            })
+                            // phxApp_.toast({ content: `<div class=""><ul class="">` + $(".ac").html() + `</ul></div>` })
                         } else if (commerceApp_.first_cart_country_id == null) {
                             commerceApp_.selectedInstalment = data
                             commerceApp_.addItem_(data)
                             commerceApp_.components["updateCart"]()
                             commerceApp_.components["cartItems"]()
                             phxApp_.notify("Added " + data.name, {
-                                    delay: 2000,
-                                    type: "success",
-                                    placement: {
-                                        from: "top",
-                                        align: "center"
-                                    }
-                                })
-                                // phxApp_.toast({ content: `<div class=""><ul class="">` + $(".ac").html() + `</ul></div>` })
+                                delay: 2000,
+                                type: "success",
+                                placement: {
+                                    from: "top",
+                                    align: "center"
+                                }
+                            })
+                            // phxApp_.toast({ content: `<div class=""><ul class="">` + $(".ac").html() + `</ul></div>` })
                         } else {
                             phxApp_.notify("Not Added ! Please choose your region products.", {
                                 delay: 2000,
@@ -4846,7 +4851,7 @@ export let commerceApp_ = {
 
                                     additional_join_statements: [{
                                         product: "product"
-                                            // product_country: "product_country",
+                                        // product_country: "product_country",
 
                                     }],
                                     additional_search_queries: [
@@ -5028,8 +5033,8 @@ export let commerceApp_ = {
                     $(".spinner-border.loading").parent().remove()
                     $(".loading").removeClass("d-none")
                     var rewards = ["sharing bonus", "team bonus", "matching bonus", "elite leader", "travel fund", "repurchase bonus", "drp sales level bonus", "stockist register bonus", "merchant sales level bonus", "biz incentive bonus", "matching biz incentive bonus"
-                            // "royalty bonus"
-                        ],
+                        // "royalty bonus"
+                    ],
                         list = []
                     rewards.forEach((r2, ii) => {
 
@@ -5099,12 +5104,12 @@ export let commerceApp_ = {
 
                     $(".spinner-border.loading").parent().remove()
                     $(".loading").removeClass("d-none")
-                 console.log("testst")
-                 var years = Object.keys(r["years"])
+                    console.log("testst")
+                    var years = Object.keys(r["years"])
 
 
-                      years.forEach((v, i) => {
-                              list.push(`
+                    years.forEach((v, i) => {
+                        list.push(`
 
                                     <div class="my-2 d-flex align-items-center justify-content-between">
 
@@ -5118,7 +5123,7 @@ export let commerceApp_ = {
                                         </span>
                                         BP
                                           </div>
-                                          <a class="btn btn-primary btn-sm" target="_blank" href="/pdf?type=commission&id=`+memberApp_.user.id+`&year=`+v+`">
+                                          <a class="btn btn-primary btn-sm" target="_blank" href="/pdf?type=commission&id=`+ memberApp_.user.id + `&year=` + v + `">
                                           Download
                                         </a>
                                       </span>
@@ -5126,12 +5131,12 @@ export let commerceApp_ = {
 
 
                                 `)
-                        })
+                    })
 
 
-                      console.info(list)
+                    console.info(list)
 
-                    $("#tabw" + rii).customHtml(``+list.join("")+``)
+                    $("#tabw" + rii).customHtml(`` + list.join("") + ``)
                     phxApp.formatDate()
                 })
             })
