@@ -2937,6 +2937,30 @@ defmodule CommerceFront.Settings do
 
   CommerceFront.Settings.contribute_group_sales("yokechu", -700, sales, placement)
 
+
+
+
+   latest =  CommerceFront.Settings.latest_group_sales_details("chrisktk", "right")
+
+  position = "right"
+  to_user = CommerceFront.Settings.get_user_by_username("lilylll")
+   latest =  CommerceFront.Settings.latest_group_sales_details("lilylll", position)
+   sales = CommerceFront.Settings.get_sale!(740)
+   amount = 700
+   CommerceFront.Settings.create_placement_group_sales_detail(
+              %{
+                before: latest.after,
+                after: latest.after + amount,
+                amount: amount,
+                from_user_id: sales.user_id,
+                to_user_id: to_user.id,
+                position: position,
+                sales_id: sales.id
+              },
+              nil
+            )
+
+
   """
 
   def contribute_group_sales(
@@ -5358,15 +5382,29 @@ defmodule CommerceFront.Settings do
                     remarks: remark
                   })
 
-                "product_point" ->
-                  # add the discount to the sale
-                  # Settings.create_wallet_transaction(%{
-                  #   user_id: user.id,
-                  #   amount: cumulative_purchase_freebie.product_point,
-                  #   remarks: remark,
-                  #   wallet_type: "product"
-                  # })
-                  nil
+                "drp" ->
+                  CommerceFront.Settings.create_wallet_transaction(%{
+                    user_id: user.id,
+                    amount: cumulative_purchase_freebie.drp,
+                    remarks: remark,
+                    wallet_type: "direct_recruitment"
+                  })
+
+                "tp" ->
+                  CommerceFront.Settings.create_wallet_transaction(%{
+                    user_id: user.id,
+                    amount: cumulative_purchase_freebie.tp,
+                    remarks: remark,
+                    wallet_type: "travel"
+                  })
+
+                "pp" ->
+                  CommerceFront.Settings.create_wallet_transaction(%{
+                    user_id: user.id,
+                    amount: cumulative_purchase_freebie.pp,
+                    remarks: remark,
+                    wallet_type: "product"
+                  })
               end
             end
           end
