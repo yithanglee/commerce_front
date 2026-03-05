@@ -7927,32 +7927,8 @@ defmodule CommerceFront.Settings do
       end
 
       rewards = Repo.delete_all(from(r in Reward, where: r.sales_id == ^sales_id))
-
-      pgsds =
-        Repo.all(
-          from(pgsd in PlacementGroupSalesDetail,
-            where: pgsd.sales_id == ^sales_id,
-            preload: [:gs_summary]
-          )
-        )
-
-      date =
-        pgsds
-        |> Enum.map(&Date.from_erl!({&1.gs_summary.year, &1.gs_summary.month, &1.gs_summary.day}))
-        |> Enum.uniq()
-        |> List.first()
-
-      if date != nil do
-        Repo.delete_all(
-          from(pgsd in PlacementGroupSalesDetail,
-            where: pgsd.sales_id == ^sales_id
-          )
-        )
-
-        CommerceFront.carry_forward_task(date |> Date.add(-1))
-        CommerceFront.Settings.reconstruct_daily_group_sales_summary(Date.utc_today())
-      end
-
+      parent_p = get_placement_by_username(s.user.username)
+      contribute_group_sales(s.user.username, s.total_point_value * -1, s, parent_p)
       {:ok, nil}
     end)
     |> Repo.transaction()
