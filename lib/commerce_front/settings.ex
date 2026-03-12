@@ -5301,117 +5301,7 @@ defmodule CommerceFront.Settings do
         end
         |> IO.inspect()
       end)
-      |> Multi.run(:cumulative_purchase_freebie, fn _repo, %{sale: sale, user: user} ->
-        # we need to check if the user accumulated sales has reached the cumulative purchase period
-        # query the cumulative purchase period by current date first  and by country_id
-        #
-        # NOTE:
-        # - `cumulative_purchase_periods.start_date/end_date` are `:naive_datetime`
-        # - Without a "claimed" check, freebies will be added again on every new sale once a user
-        #   crosses the threshold (duplicated freebies).
 
-        now = NaiveDateTime.utc_now()
-
-        cumulative_purchase_periods =
-          Repo.all(
-            from(cp in CumulativePurchasePeriod,
-              where:
-                cp.start_date <= ^now and cp.end_date >= ^now and
-                  cp.country_id == ^user.country_id
-            )
-          )
-
-        for cumulative_purchase_period <- cumulative_purchase_periods do
-          # query the cumulative purchase freebies by cumulative purchase period id
-          accumulated_sales =
-            Repo.one(
-              from(s in Sale,
-                where:
-                  s.user_id == ^user.id and
-                    s.inserted_at >= ^cumulative_purchase_period.start_date and
-                    s.inserted_at <= ^cumulative_purchase_period.end_date,
-                select: sum(s.grand_total)
-              )
-            ) || 0.0
-
-          cumulative_purchase_freebies =
-            Repo.all(
-              from(cf in CumulativePurchaseFreebie,
-                where:
-                  cf.cumulative_purchase_period_id == ^cumulative_purchase_period.id and
-                    cf.total_cumulative_rp <= ^accumulated_sales
-              )
-            )
-
-          for cumulative_purchase_freebie <- cumulative_purchase_freebies do
-            # prevent duplicating the same freebie across multiple purchases within the same period
-            remark = "Cumulative Purchase Freebie:  Product ID #{cumulative_purchase_freebie.id}"
-
-            claimed_count =
-              Repo.one(
-                from(si in SalesItem,
-                  join: s in Sale,
-                  on: s.id == si.sales_id,
-                  where:
-                    s.user_id == ^user.id and
-                      s.inserted_at >= ^cumulative_purchase_period.start_date and
-                      s.inserted_at <= ^cumulative_purchase_period.end_date and
-                      si.remarks == ^remark,
-                  select: count(si.id)
-                )
-              ) || 0
-
-            # check if the user accumulated sales has reached the cumulative purchase freebie
-            # check the freebie type and apply the freebie to the sale
-            if claimed_count > 0 do
-              nil
-            else
-              case cumulative_purchase_freebie.reward_type do
-                "product" ->
-                  product =
-                    CommerceFront.Settings.get_product!(cumulative_purchase_freebie.product_id)
-
-                  # add the product to the sale
-                  create_sales_item(%{
-                    item_pv: product.point_value,
-                    img_url: product.img_url,
-                    sales_id: sale.id,
-                    item_name: product.name,
-                    qty: cumulative_purchase_freebie.qty,
-                    item_price: product.retail_price,
-                    remarks: remark
-                  })
-
-                "drp" ->
-                  CommerceFront.Settings.create_wallet_transaction(%{
-                    user_id: user.id,
-                    amount: cumulative_purchase_freebie.drp,
-                    remarks: remark,
-                    wallet_type: "direct_recruitment"
-                  })
-
-                "tp" ->
-                  CommerceFront.Settings.create_wallet_transaction(%{
-                    user_id: user.id,
-                    amount: cumulative_purchase_freebie.tp,
-                    remarks: remark,
-                    wallet_type: "travel"
-                  })
-
-                "pp" ->
-                  CommerceFront.Settings.create_wallet_transaction(%{
-                    user_id: user.id,
-                    amount: cumulative_purchase_freebie.pp,
-                    remarks: remark,
-                    wallet_type: "product"
-                  })
-              end
-            end
-          end
-        end
-
-        {:ok, nil}
-      end)
       |> Multi.run(:member_instalment, fn _repo, %{sale: sale, user: user} ->
         sale = sale |> Repo.preload(:sales_items)
 
@@ -5738,6 +5628,117 @@ defmodule CommerceFront.Settings do
             {:ok, nil}
           end
         end
+      end)
+      |> Multi.run(:cumulative_purchase_freebie, fn _repo, %{sale: sale, user: user} ->
+        # we need to check if the user accumulated sales has reached the cumulative purchase period
+        # query the cumulative purchase period by current date first  and by country_id
+        #
+        # NOTE:
+        # - `cumulative_purchase_periods.start_date/end_date` are `:naive_datetime`
+        # - Without a "claimed" check, freebies will be added again on every new sale once a user
+        #   crosses the threshold (duplicated freebies).
+
+        now = NaiveDateTime.utc_now()
+
+        cumulative_purchase_periods =
+          Repo.all(
+            from(cp in CumulativePurchasePeriod,
+              where:
+                cp.start_date <= ^now and cp.end_date >= ^now and
+                  cp.country_id == ^user.country_id
+            )
+          )
+
+        for cumulative_purchase_period <- cumulative_purchase_periods do
+          # query the cumulative purchase freebies by cumulative purchase period id
+          accumulated_sales =
+            Repo.one(
+              from(s in Sale,
+                where:
+                  s.user_id == ^user.id and
+                    s.inserted_at >= ^cumulative_purchase_period.start_date and
+                    s.inserted_at <= ^cumulative_purchase_period.end_date,
+                select: sum(s.grand_total)
+              )
+            ) || 0.0
+
+          cumulative_purchase_freebies =
+            Repo.all(
+              from(cf in CumulativePurchaseFreebie,
+                where:
+                  cf.cumulative_purchase_period_id == ^cumulative_purchase_period.id and
+                    cf.total_cumulative_rp <= ^accumulated_sales
+              )
+            )
+
+          for cumulative_purchase_freebie <- cumulative_purchase_freebies do
+            # prevent duplicating the same freebie across multiple purchases within the same period
+            remark = "Cumulative Purchase Freebie:  Product ID #{cumulative_purchase_freebie.id}"
+
+            claimed_count =
+              Repo.one(
+                from(si in SalesItem,
+                  join: s in Sale,
+                  on: s.id == si.sales_id,
+                  where:
+                    s.user_id == ^user.id and
+                      s.inserted_at >= ^cumulative_purchase_period.start_date and
+                      s.inserted_at <= ^cumulative_purchase_period.end_date and
+                      si.remarks == ^remark,
+                  select: count(si.id)
+                )
+              ) || 0
+
+            # check if the user accumulated sales has reached the cumulative purchase freebie
+            # check the freebie type and apply the freebie to the sale
+            if claimed_count > 0 do
+              nil
+            else
+              case cumulative_purchase_freebie.reward_type do
+                "product" ->
+                  product =
+                    CommerceFront.Settings.get_product!(cumulative_purchase_freebie.product_id)
+
+                  # add the product to the sale
+                  create_sales_item(%{
+                    item_pv: product.point_value,
+                    img_url: product.img_url,
+                    sales_id: sale.id,
+                    item_name: product.name,
+                    qty: cumulative_purchase_freebie.qty,
+                    item_price: product.retail_price,
+                    remarks: remark
+                  })
+
+                "drp" ->
+                  CommerceFront.Settings.create_wallet_transaction(%{
+                    user_id: user.id,
+                    amount: cumulative_purchase_freebie.drp,
+                    remarks: remark,
+                    wallet_type: "direct_recruitment"
+                  })
+
+                "tp" ->
+                  CommerceFront.Settings.create_wallet_transaction(%{
+                    user_id: user.id,
+                    amount: cumulative_purchase_freebie.tp,
+                    remarks: remark,
+                    wallet_type: "travel"
+                  })
+
+                "pp" ->
+                  CommerceFront.Settings.create_wallet_transaction(%{
+                    user_id: user.id,
+                    amount: cumulative_purchase_freebie.pp,
+                    remarks: remark,
+                    wallet_type: "product"
+                  })
+              end
+            end
+          end
+        end
+
+        {:ok, nil}
       end)
       |> Multi.run(:stockist, fn _repo,
                                  %{
@@ -7913,11 +7914,24 @@ defmodule CommerceFront.Settings do
     })
   end
 
-  def recalculate_wallet_before_after(wt_after_amount, wt_id, user_id, wallet_type) do
+  @doc """
+    Recalculate the before and after amount of the wallet transactions
+    after a certain wallet transaction.
+    CommerceFront.Settings.recalculate_wallet_before_after(736.17, 32897  , "happiness", "bonus")
+  """
+  def recalculate_wallet_before_after(wt_after_amount, wt_id, username, wallet_type) do
+    user = CommerceFront.Settings.get_user_by_username(username)
+
+    ewallet =
+      Repo.all(
+        from(ew in Ewallet, where: ew.user_id == ^user.id and ew.wallet_type == ^wallet_type)
+      )
+      |> List.first()
+
     wts =
       Repo.all(
         from(wt in WalletTransaction,
-          where: wt.user_id == ^user_id and wt.id > ^wt_id,
+          where: wt.user_id == ^user.id and wt.id > ^wt_id and wt.ewallet_id == ^ewallet.id,
           order_by: [asc: wt.id]
         )
       )
@@ -7927,7 +7941,23 @@ defmodule CommerceFront.Settings do
       wt.amount + after_amount
     end
 
-    Enum.reduce(wts, wt_after_amount, &calc.(&1, &2))
+    check = Enum.reduce(wts, wt_after_amount, &calc.(&1, &2))
+
+    post_wts =
+      Repo.all(
+        from(wt in WalletTransaction,
+          where: wt.user_id == ^user.id and wt.id > ^wt_id and wt.ewallet_id == ^ewallet.id,
+          order_by: [asc: wt.id]
+        )
+      )
+      |> List.last()
+
+    if check == post_wts.after do
+      ewallet = update_ewallet(ewallet, %{amount: post_wts.after})
+      {:ok, ewallet}
+    else
+      {:error, "not same"}
+    end
   end
 
   def cancel_sales(sales_id) do
