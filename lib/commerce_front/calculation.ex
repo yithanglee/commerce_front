@@ -452,10 +452,13 @@ defmodule CommerceFront.Calculation do
   compress until the total_point_value is paid completely...
 
   need to pay the rest to unpaid account
+  sale = CommerceFront.Settings.get_sale!(659)
+  referral = CommerceFront.Settings.get_referral_by_username(sale.user.username)
+  CommerceFront.Calculation.sharing_bonus(sale.user.username, 2000, sale, referral)
 
   """
 
-  def sharing_bonus(username, total_point_value, sale, referral) do
+  def deprecated_sharing_bonus(username, total_point_value, sale, referral) do
     unpaid_node = unpaid_node()
 
     uplines =
@@ -639,7 +642,21 @@ defmodule CommerceFront.Calculation do
     {:ok, nil}
   end
 
-  def _sharing_bonus(username, total_point_value, sale, referral) do
+
+  @doc """
+
+  find uplines,
+  check upline rank,
+  compress until the total_point_value is paid completely...
+
+  need to pay the rest to unpaid account
+  sale = CommerceFront.Settings.get_sale!(659)
+  referral = CommerceFront.Settings.get_referral_by_username(sale.user.username)
+  CommerceFront.Calculation.sharing_bonus(sale.user.username, 2000, sale, referral)
+
+  """
+
+  def sharing_bonus(username, total_point_value, sale, referral) do
     unpaid_node = unpaid_node()
 
     uplines =
@@ -652,13 +669,20 @@ defmodule CommerceFront.Calculation do
       |> Enum.with_index(1)
 
     matrix = [
-      # %{rank: "Shopper", l1: 0.0, calculated: false},
-      %{rank: "铜级套餐", l1: 0.2, calculated: false},
-      %{rank: "银级套餐", l1: 0.2, l2: 0.1, calculated: false},
-      %{rank: "金级套餐", l1: 0.2, l2: 0.1, l3: 0.1, calculated: false}
+      %{rank: "铜级套餐", l1: 0.2},
+      %{rank: "银级套餐", l1: 0.2, l2: 0.1},
+      %{rank: "金级套餐", l1: 0.2, l2: 0.1, l3: 0.1}
     ]
 
-    run_calc = fn {upline, index}, {calc_index, eval_matrix, remainder_point_value} ->
+    bronze_cap = 200
+    addon_rate = 0.2
+
+    rank_cap_map = %{
+      "铜级套餐" => bronze_cap,
+      "银级套餐" => bronze_cap * 2
+    }
+
+    run_calc = fn {upline, index}, {calc_index, covered_pv} ->
       user = CommerceFront.Settings.get_user_by_username(upline.parent)
       rank = user.rank_id |> CommerceFront.Settings.get_rank!() |> IO.inspect()
 
@@ -670,17 +694,10 @@ defmodule CommerceFront.Calculation do
       perc =
         if calc_table != nil do
           case calc_index do
-            1 ->
-              calc_table |> Map.get(:l1, 0)
-
-            2 ->
-              calc_table |> Map.get(:l2, 0)
-
-            3 ->
-              calc_table |> Map.get(:l3, 0)
-
-            _ ->
-              0
+            1 -> calc_table |> Map.get(:l1, 0)
+            2 -> calc_table |> Map.get(:l2, 0)
+            3 -> calc_table |> Map.get(:l3, 0)
+            _ -> 0
           end
           |> IO.inspect()
         else
@@ -689,117 +706,29 @@ defmodule CommerceFront.Calculation do
 
       with true <- calc_table != nil,
            true <- calc_index < 4,
-           list <-
-             eval_matrix
-             |> Enum.reject(&(&1.calculated == true))
-             |> Enum.filter(&(&1.rank == rank.name)),
-           true <- list != [],
-           matrix_item <-
-             list
-             |> List.first(),
-           calculated <-
-             matrix_item
-             |> Map.get(:calculated),
-           true <- calculated == false do
-        # remainder_point_value initial is 700
-        {bonus, remainder_point_value, addon_gold_bonus, addon_silver_bonus} =
-          case calc_index do
-            1 ->
-              case rank.name do
-                "金级套餐" ->
-                  {remainder_point_value * perc, remainder_point_value, 0, 0}
+           true <- perc > 0 do
+        rank_cap = Map.get(rank_cap_map, rank.name, total_point_value)
 
-                "银级套餐" ->
-                  if total_point_value > 400 do
-                    {min(remainder_point_value, 200) * perc, min(remainder_point_value, 200), 0,
-                     200 * 0.2}
-                  else
-                    {remainder_point_value * perc, remainder_point_value, 0, 0}
-                  end
-
-                _ ->
-                  {min(remainder_point_value, 200) * perc, min(remainder_point_value, 200), 0, 0}
-              end
-
-            2 ->
-              bonus = remainder_point_value * perc
-
-              case rank.name do
-                "银级套餐" ->
-                  bonus = remainder_point_value * perc
-
-                  {bonus, addon_silver_bonus} =
-                    if total_point_value > 400 do
-                      # if  at calc_index 1 is a rank gold, then no need  * 0.2 ...
-                      lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
-
-                      if lv1 in ["金级套餐", "银级套餐"] do
-                        {bonus, 0}
-                      else
-                        {bonus, 200 * 0.2}
-                      end
-                    else
-                      {bonus, 0}
-                    end
-
-                  {bonus, remainder_point_value, 0, addon_silver_bonus}
-
-                "金级套餐" ->
-                  bonus = remainder_point_value * perc
-
-                  {bonus, addon_silver_bonus} =
-                    if total_point_value > 400 do
-                      # if  at calc_index 1 is a rank gold, then no need  * 0.2 ...
-                      lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
-
-                      case lv1 do
-                        "金级套餐" ->
-                          {bonus, 0}
-
-                        "银级套餐" ->
-                          {bonus, 300 * 0.2}
-
-                        _ ->
-                          {bonus, 200 * 0.2}
-                      end
-                    else
-                      {bonus, 0}
-                    end
-
-                  {bonus, remainder_point_value, 0, addon_silver_bonus}
-
-                _ ->
-                  {bonus, remainder_point_value, 0, 0}
-              end
-
-            3 ->
-              bonus = remainder_point_value * perc
-
-              {bonus, addon_gold_bonus} =
-                if total_point_value > 400 do
-                  # if  at calc_index 1 is a rank gold, then no need  * 0.2 ...
-                  lv1 = uplines |> Enum.at(0) |> elem(0) |> Map.get(:rank)
-
-                  if lv1 == "金级套餐" do
-                    {bonus, 0}
-                  else
-                    {bonus, (total_point_value - 400) * 0.2}
-                  end
-                else
-                  {bonus, 0}
-                end
-
-              {bonus, remainder_point_value, addon_gold_bonus, 0}
+        base =
+          if calc_index == 1 do
+            min(total_point_value, bronze_cap) * perc
+          else
+            total_point_value * perc
           end
+
+        addon_pv = max(0, min(rank_cap, total_point_value) - covered_pv)
+        addon_bonus = addon_pv * addon_rate
+
+        new_covered_pv = max(covered_pv, min(rank_cap, total_point_value))
 
         {:ok, r} =
           CommerceFront.Settings.create_reward(%{
             sales_id: sale.id,
             is_paid: false,
             remarks:
-              "sales-#{sale.id}|#{remainder_point_value} * #{perc} = #{bonus} + #{addon_gold_bonus}#{addon_silver_bonus}|lvl:#{calc_index}/#{rank.name}|skipped to: lv#{index}",
+              "sales-#{sale.id}|base:#{base}+addon:#{addon_pv}PV*#{addon_rate}=#{addon_bonus}|total:#{base + addon_bonus}|lvl:#{calc_index}/#{rank.name}|skipped to: lv#{index}",
             name: "sharing bonus",
-            amount: bonus + addon_gold_bonus + addon_silver_bonus,
+            amount: base + addon_bonus,
             user_id: user.id,
             day: Date.utc_today().day,
             month: Date.utc_today().month,
@@ -808,24 +737,14 @@ defmodule CommerceFront.Calculation do
 
         # CommerceFront.Settings.pay_to_bonus_wallet(r)
 
-        new_matrix_item =
-          matrix |> Enum.find(&(&1.rank == rank.name)) |> Map.put(:calculated, true)
-
-        remove_index = matrix |> Enum.find_index(&(&1.rank == rank.name))
-
-        pre_matrix = List.delete_at(matrix, 0)
-
-        next_matrix = List.insert_at(pre_matrix, 0, new_matrix_item)
-
-        # remainder_point_value - bonus
-        {calc_index + 1, next_matrix, total_point_value}
+        {calc_index + 1, new_covered_pv}
       else
         _ ->
-          {calc_index, eval_matrix, total_point_value}
+          {calc_index, covered_pv}
       end
     end
 
-    Enum.reduce(uplines, {1, matrix, total_point_value}, &run_calc.(&1, &2))
+    Enum.reduce(uplines, {1, min(bronze_cap, total_point_value)}, &run_calc.(&1, &2))
 
     {:ok, nil}
   end
