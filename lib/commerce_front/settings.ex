@@ -1316,6 +1316,45 @@ defmodule CommerceFront.Settings do
     Product.changeset(%Product{}, params) |> Repo.insert() |> IO.inspect()
   end
 
+  def create_product_with_stocks(params) do
+    product_params = params["product"] || %{}
+    stocks_list = params["stocks"] || []
+
+    Multi.new()
+    |> Multi.insert(:product, Product.changeset(%Product{}, product_params))
+    |> Multi.run(:product_stocks, fn repo, %{product: product} ->
+      results =
+        for stock_item <- stocks_list do
+          CommerceFront.Settings.ProductStock.changeset(%CommerceFront.Settings.ProductStock{}, %{
+            product_id: product.id,
+            stock_id: stock_item["stock_id"],
+            qty: stock_item["qty"] || 1
+          })
+          |> repo.insert()
+        end
+
+      errors = Enum.filter(results, fn {status, _} -> status == :error end)
+
+      if errors == [] do
+        {:ok, results}
+      else
+        {:error, errors}
+      end
+    end)
+    |> Multi.run(:product_country, fn repo, %{product: product} ->
+      if country_id = product_params["country_id"] do
+        ProductCountry.changeset(%ProductCountry{}, %{
+          product_id: product.id,
+          country_id: country_id
+        })
+        |> repo.insert()
+      else
+        {:ok, nil}
+      end
+    end)
+    |> Repo.transaction()
+  end
+
   def update_product(model, params) do
     Product.changeset(model, params) |> Repo.update() |> IO.inspect()
   end
@@ -5301,7 +5340,6 @@ defmodule CommerceFront.Settings do
         end
         |> IO.inspect()
       end)
-
       |> Multi.run(:member_instalment, fn _repo, %{sale: sale, user: user} ->
         sale = sale |> Repo.preload(:sales_items)
 

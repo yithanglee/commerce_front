@@ -642,7 +642,6 @@ defmodule CommerceFront.Calculation do
     {:ok, nil}
   end
 
-
   @doc """
 
   find uplines,
@@ -1927,8 +1926,8 @@ defmodule CommerceFront.Calculation do
   ---
   bromze g1 2%
 
-
-  CommerceFront.Calculation.drp_sales_level_bonus(132, 81, CommerceFront.Settings.get_user_by_username("freddy3"), ~D[2024-05-31])
+  sale = CommerceFront.Settings.get_sale!(764)
+  CommerceFront.Calculation.drp_sales_level_bonus(sale.id, 1078, sale.user, ~D[2026-03-21])
 
   16/07
 

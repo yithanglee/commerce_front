@@ -838,7 +838,7 @@ defmodule Razer do
     datetime = NaiveDateTime.utc_now() |> Timex.format!("%Y%m%d%H%M%S", :strftime)
 
     params = [
-      {"merchantID", @merchant_id},
+      {"merchantID", merchant_id()},
       {"datetime", datetime},
       {"skey", generate_signature.(datetime)}
     ]

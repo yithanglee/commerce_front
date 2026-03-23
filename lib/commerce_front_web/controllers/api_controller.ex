@@ -74,7 +74,6 @@ defmodule CommerceFrontWeb.ApiController do
 
     res =
       case params["scope"] do
-
         "model_get_by" ->
           map =
             params
@@ -101,6 +100,7 @@ defmodule CommerceFrontWeb.ApiController do
               :scope
             ])
           )
+
         "travel_fund_qualifiers" ->
           Settings.travel_fund_qualifier(
             params["year"] |> String.to_integer(),
@@ -353,7 +353,6 @@ defmodule CommerceFrontWeb.ApiController do
             additional_rp
           )
 
-
         "get_role_app_routes" ->
           Settings.get_role!(params["id"]) |> BluePotion.sanitize_struct()
 
@@ -443,7 +442,8 @@ defmodule CommerceFrontWeb.ApiController do
                 |> Enum.filter(&(&1.parent == parent.username))
 
               res =
-                Settings.accumulated_sales_by_user(user, params["show_rank"]) |> IO.inspect(label: "accumulated_sales_by_user #{user.username}")
+                Settings.accumulated_sales_by_user(user, params["show_rank"])
+                |> IO.inspect(label: "accumulated_sales_by_user #{user.username}")
                 |> List.insert_at(2, %{"is_direct_downline" => check})
                 |> List.insert_at(3, %{"is_downline" => check2 != []})
 
@@ -1342,6 +1342,18 @@ defmodule CommerceFrontWeb.ApiController do
 
             _ ->
               %{status: "error"}
+          end
+
+        "create_product_with_stocks" ->
+          case Settings.create_product_with_stocks(params) do
+            {:ok, multi_res} ->
+              %{status: "ok", res: BluePotion.sanitize_struct(multi_res.product)}
+
+            {:error, _failed_operation, _failed_value, _changes_so_far} ->
+              %{status: "error", reason: "Database transaction failed"}
+
+            _ ->
+              %{status: "error", reason: "Unknown error"}
           end
 
         _ ->
