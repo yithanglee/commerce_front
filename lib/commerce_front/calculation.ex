@@ -93,7 +93,7 @@ defmodule CommerceFront.Calculation do
           IO.inspect("current index at #{index}")
 
           max = matrix |> Enum.filter(&(&1.rank == upline.rank)) |> List.first() |> Map.get(:max)
-
+        # if 0.5 / 8 = 0.0625 * 100 = 6.25%
           perc = (merchant.commission_perc / 8) |> Float.round(4)
 
           if index < max do

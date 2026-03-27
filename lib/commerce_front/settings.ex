@@ -6330,6 +6330,13 @@ defmodule CommerceFront.Settings do
       |> Enum.sum()
     end
 
+# 1000
+# 200 rp convert to 200 pp ( its like creating a sales order for product points package ...)
+# 200 rp -> 100 pv
+# 200 rp -> is like a sales order ...
+# the 100 pv need to accumulate to upgrade to next rank ...
+
+
     total_this_month = check_this_month_reward.(reward.user_id, month_rewards)
 
     {amount, remarks} =
