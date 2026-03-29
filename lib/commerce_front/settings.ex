@@ -2140,7 +2140,7 @@ defmodule CommerceFront.Settings do
   end
 
   def get_referral_by_username(username) do
-    if username == "admin" do
+    if username == "admin" || username == "haho_unpaid" do
       %{id: 0, user_id: 0}
     else
       res = Repo.all(from(u in User, where: u.username == ^username)) |> List.first()
@@ -2198,7 +2198,7 @@ defmodule CommerceFront.Settings do
   end
 
   def get_placement_by_username(username) do
-    if username == "admin" do
+    if username == "admin" || username == "haho_unpaid" do
       %{id: 0, user_id: 0}
     else
       res = Repo.all(from(u in User, where: u.username == ^username)) |> List.first()
@@ -5488,6 +5488,8 @@ defmodule CommerceFront.Settings do
             {:ok, nil}
 
           true ->
+
+
             unless "merchant" in Map.keys(params) do
               contribute_group_sales(user.username, sale.total_point_value, sale, placement)
             else
@@ -5638,12 +5640,14 @@ defmodule CommerceFront.Settings do
                                              } ->
         if params["upgrade"] != nil do
           unless "merchant" in Map.keys(params) do
-            special_share_reward(
-              referral.parent_user_id,
-              sale.total_point_value,
-              sale,
-              params["scope"]
-            )
+            if "parent_user_id" in Map.keys(referral) do
+              special_share_reward(
+                referral.parent_user_id,
+                sale.total_point_value,
+                sale,
+                params["scope"]
+              )
+            end
           end
 
           {:ok, nil}
@@ -6231,8 +6235,36 @@ defmodule CommerceFront.Settings do
                 wallet_type: "register"
               }
 
+            reward.name == "merchant sales level bonus" ->
+              bonus_amount = (reward.amount * 0.8) |> Float.round(2)
+              product_amount = (reward.amount * 0.2) |> Float.round(2)
+
+              params = %{
+                reward_id: reward.id,
+                user_id: user_id,
+                amount: bonus_amount,
+                remarks: reward.remarks <> "|80% bonus split",
+                wallet_type: "bonus"
+              }
+
               case create_wallet_transaction(params) do
-                {:ok, wt} ->
+                {:ok, _wt} ->
+                  CommerceFront.Settings.process_product_wallet_upgrade(
+                    user,
+                    product_amount,
+                    reward
+                  )
+
+                  params2 = %{
+                    reward_id: reward.id,
+                    user_id: user_id,
+                    amount: (reward.amount * 0.2) |> Float.round(2),
+                    remarks: reward.remarks <> "|pay: 20%",
+                    wallet_type: "product"
+                  }
+
+                  create_wallet_transaction(params2)
+
                   update_reward(reward, %{is_paid: true})
 
                 {:error, cg} ->
@@ -6330,28 +6362,30 @@ defmodule CommerceFront.Settings do
       |> Enum.sum()
     end
 
-# 1000
-# 200 rp convert to 200 pp ( its like creating a sales order for product points package ...)
-# 200 rp -> 100 pv
-# 200 rp -> is like a sales order ...
-# the 100 pv need to accumulate to upgrade to next rank ...
-
+    # 1000
+    # 200 rp convert to 200 pp ( its like creating a sales order for product points package ...)
+    # 200 rp -> 100 pv
+    # 200 rp -> is like a sales order ...
+    # the 100 pv need to accumulate to upgrade to next rank ...
 
     total_this_month = check_this_month_reward.(reward.user_id, month_rewards)
 
     {amount, remarks} =
-      if reward.name not in matrix do
-        {reward.amount, "month total: #{total_this_month}|pay: 100%"}
-      else
-        if username == "haho_unpaid" do
+      cond do
+        reward.name == "merchant sales level bonus" ->
+          {reward.amount * 0.8, "month total: #{total_this_month}|pay: 80% split"}
+
+        reward.name not in matrix ->
           {reward.amount, "month total: #{total_this_month}|pay: 100%"}
-        else
-          if total_this_month > 10000 do
-            {reward.amount, "month total: #{total_this_month}|pay: 100%"}
-          else
-            {reward.amount * 0.9, "month total: #{total_this_month}|pay: 90%"}
-          end
-        end
+
+        username == "haho_unpaid" ->
+          {reward.amount, "month total: #{total_this_month}|pay: 100%"}
+
+        total_this_month > 10000 ->
+          {reward.amount, "month total: #{total_this_month}|pay: 100%"}
+
+        true ->
+          {reward.amount * 0.9, "month total: #{total_this_month}|pay: 90%"}
       end
 
     params = %{
@@ -6364,6 +6398,11 @@ defmodule CommerceFront.Settings do
 
     case create_wallet_transaction(params) do
       {:ok, wt} ->
+        if reward.name == "merchant sales level bonus" do
+          product_amount = (reward.amount * 0.2) |> Float.round(2)
+          CommerceFront.Settings.process_product_wallet_upgrade(user, product_amount, reward)
+        end
+
         if total_this_month <= 10000 && reward.name in matrix && username != "haho_unpaid" do
           params2 = %{
             reward_id: reward.id,
@@ -9055,6 +9094,74 @@ defmodule CommerceFront.Settings do
       }
 
       fin
+    end
+  end
+
+  def process_product_wallet_upgrade(user, product_amount, _reward) do
+    # 20 points = 20 PV = 40 RP
+    # ratio: 1 point = 1 PV = 2 RP
+    pv = product_amount
+    rp = product_amount
+
+    params = %{
+      "_csrf_token" => "",
+      "scope" => "upgrade",
+      "user" => %{
+        "country_id" => "1",
+        "payment" => %{"drp" => "0", "method" => "register_wallet"},
+        "pick_up_point_id" => "",
+        "products" => %{
+          "0" => %{
+            "img_url" => "",
+            "item_name" => "Product Points",
+            "item_price" => "#{rp}",
+            "item_pv" => 1,
+            "qty" => "1"
+          }
+        },
+        "sales_person_id" => "#{user.id}",
+        "password" => "",
+        "shipping" => %{},
+        "upgrade" => user.username
+      }
+    }
+
+    # Simplified sale creation to pipe into register/2
+    multi =
+      Multi.new()
+      |> Multi.run(:sale, fn _repo, %{} ->
+        create_sale(%{
+          is_instalment: false,
+          pick_up_point_id: nil,
+          country_id: "1",
+          month: Date.utc_today().month,
+          year: Date.utc_today().year,
+          sale_date: Date.utc_today(),
+          status: :pending_payment,
+          subtotal: rp,
+          grand_total: rp,
+          total_point_value: pv * 0.5,
+          registration_details: Jason.encode!(params),
+          sales_person_id: user.id,
+          user_id: user.id
+        })
+      end)
+      |> Multi.run(:sales_item, fn _repo, %{sale: sale} ->
+        create_sales_item(%{
+          "sales_id" => sale.id,
+          "item_name" => "Product Points",
+          "item_price" => rp,
+          "item_pv" => 1,
+          "qty" => 1
+        })
+      end)
+
+    case Repo.transaction(multi) do
+      {:ok, %{sale: sale}} ->
+        register(params["user"], sale)
+
+      error ->
+        error
     end
   end
 end
