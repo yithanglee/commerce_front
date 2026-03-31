@@ -1544,7 +1544,15 @@ defmodule CommerceFront.Calculation do
           end
           |> Enum.reject(&(&1 == nil))
 
-        count = Enum.count(one_star_qualifier)
+        {count, one_star_qualifier} =
+          if Enum.count(one_star_qualifier |> Enum.reject(&(&1.username == "haho_unpaid"))) > 0 do
+            {Enum.count(one_star_qualifier),
+             one_star_qualifier |> Enum.reject(&(&1.username == "haho_unpaid"))}
+          else
+            {Enum.count(one_star_qualifier), one_star_qualifier}
+          end
+
+        # if got other members, exclude haho_unpaid
 
         if count > 0 do
           one_star_amount = total_sales_pv * 0.01 / count
