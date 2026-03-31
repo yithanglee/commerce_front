@@ -1546,7 +1546,7 @@ defmodule CommerceFront.Calculation do
 
         {count, one_star_qualifier} =
           if Enum.count(one_star_qualifier |> Enum.reject(&(&1.username == "haho_unpaid"))) > 0 do
-            {Enum.count(one_star_qualifier),
+            {Enum.count(one_star_qualifier |> Enum.reject(&(&1.username == "haho_unpaid"))),
              one_star_qualifier |> Enum.reject(&(&1.username == "haho_unpaid"))}
           else
             {Enum.count(one_star_qualifier), one_star_qualifier}
