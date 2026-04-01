@@ -5488,8 +5488,6 @@ defmodule CommerceFront.Settings do
             {:ok, nil}
 
           true ->
-
-
             unless "merchant" in Map.keys(params) do
               contribute_group_sales(user.username, sale.total_point_value, sale, placement)
             else
@@ -6234,6 +6232,14 @@ defmodule CommerceFront.Settings do
                 remarks: reward.remarks,
                 wallet_type: "register"
               }
+
+              case create_wallet_transaction(params) do
+                {:ok, wt} ->
+                  update_reward(reward, %{is_paid: true})
+
+                {:error, cg} ->
+                  {:error, cg}
+              end
 
             reward.name == "merchant sales level bonus" ->
               bonus_amount = (reward.amount * 0.8) |> Float.round(2)
