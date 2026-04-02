@@ -2934,9 +2934,10 @@ export let commerceApp_ = {
 
             const additional_rp = (window.currentCartSubtotalRP != null) ? window.currentCartSubtotalRP : 0.0;
 
-            phxApp_.api("get_cumulative_purchase_freebies_status", {
+            phxApp_.post("get_cumulative_purchase_freebies_status", {
                 username,
-                additional_rp
+                additional_rp,
+                cart: commerceApp_.cart_
             }, null, (periods) => {
                 try {
                     if (!periods || periods.length === 0) {

@@ -332,27 +332,6 @@ defmodule CommerceFrontWeb.ApiController do
         "get_cumulative_purchase_freebies" ->
           Settings.get_cumulative_purchase_period!(params["id"]) |> BluePotion.sanitize_struct()
 
-        "get_cumulative_purchase_freebies_status" ->
-          additional_rp =
-            case Map.get(params, "additional_rp") do
-              nil ->
-                0.0
-
-              v when is_number(v) ->
-                v * 1.0
-
-              v ->
-                case Float.parse(to_string(v)) do
-                  {f, _} -> f
-                  _ -> 0.0
-                end
-            end
-
-          Settings.cumulative_purchase_freebies_status_by_username(
-            params["username"],
-            additional_rp
-          )
-
         "get_role_app_routes" ->
           Settings.get_role!(params["id"]) |> BluePotion.sanitize_struct()
 
@@ -925,6 +904,29 @@ defmodule CommerceFrontWeb.ApiController do
           post(conn, sample3)
 
           %{status: "ok"}
+
+        "get_cumulative_purchase_freebies_status" ->
+          additional_rp =
+            case Map.get(params, "additional_rp") do
+              nil ->
+                0.0
+
+              v when is_number(v) ->
+                v * 1.0
+
+              v ->
+                case Float.parse(to_string(v)) do
+                  {f, _} -> f
+                  _ -> 0.0
+                end
+            end
+
+          Settings.cumulative_purchase_freebies_status_by_username(
+            params["username"],
+            additional_rp,
+            params["cart"]
+          )
+          |> IO.inspect(label: " cumulative res")
 
         "sync_menu" ->
           params["_json"] |> Settings.populate_menus() |> IO.inspect()
