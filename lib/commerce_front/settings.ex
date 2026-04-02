@@ -5678,105 +5678,127 @@ defmodule CommerceFront.Settings do
         # - Without a "claimed" check, freebies will be added again on every new sale once a user
         #   crosses the threshold (duplicated freebies).
 
-        now = NaiveDateTime.utc_now()
-
-        cumulative_purchase_periods =
-          Repo.all(
-            from(cp in CumulativePurchasePeriod,
-              where:
-                cp.start_date <= ^now and cp.end_date >= ^now and
-                  cp.country_id == ^user.country_id
+        # need to exclude those products that contains DT2 - malaysia
+        # if the sale_items in this sale contains DT2 items (via product_stocks -> stocks.name = 'DT 2'), skip this function
+        has_dt2_item =
+          Repo.exists?(
+            from(si in CommerceFront.Settings.SalesItem,
+              join: p in CommerceFront.Settings.Product,
+              on: p.name == si.item_name,
+              join: ps in CommerceFront.Settings.ProductStock,
+              on: ps.product_id == p.id,
+              join: s in CommerceFront.Settings.Stock,
+              on: s.id == ps.stock_id,
+              where: si.sales_id == ^sale.id and s.name == ^"DT2"
             )
           )
 
-        for cumulative_purchase_period <- cumulative_purchase_periods do
-          # query the cumulative purchase freebies by cumulative purchase period id
-          accumulated_sales =
-            Repo.one(
-              from(s in Sale,
-                where:
-                  s.user_id == ^user.id and
-                    s.inserted_at >= ^cumulative_purchase_period.start_date and
-                    s.inserted_at <= ^cumulative_purchase_period.end_date,
-                select: sum(s.grand_total)
-              )
-            ) || 0.0
+        if has_dt2_item do
+          {:ok, nil}
+        else
+          now = NaiveDateTime.utc_now()
 
-          cumulative_purchase_freebies =
+          cumulative_purchase_periods =
             Repo.all(
-              from(cf in CumulativePurchaseFreebie,
+              from(cp in CumulativePurchasePeriod,
                 where:
-                  cf.cumulative_purchase_period_id == ^cumulative_purchase_period.id and
-                    cf.total_cumulative_rp <= ^accumulated_sales
+                  cp.start_date <= ^now and cp.end_date >= ^now and
+                    cp.country_id == ^user.country_id
               )
             )
 
-          for cumulative_purchase_freebie <- cumulative_purchase_freebies do
-            # prevent duplicating the same freebie across multiple purchases within the same period
-            remark = "Cumulative Purchase Freebie:  Product ID #{cumulative_purchase_freebie.id}"
-
-            claimed_count =
+          for cumulative_purchase_period <- cumulative_purchase_periods do
+            # query the cumulative purchase freebies by cumulative purchase period id
+            accumulated_sales =
               Repo.one(
-                from(si in SalesItem,
-                  join: s in Sale,
-                  on: s.id == si.sales_id,
+                from(s in Sale,
                   where:
                     s.user_id == ^user.id and
                       s.inserted_at >= ^cumulative_purchase_period.start_date and
-                      s.inserted_at <= ^cumulative_purchase_period.end_date and
-                      si.remarks == ^remark,
-                  select: count(si.id)
+                      s.inserted_at <= ^cumulative_purchase_period.end_date,
+                  select: sum(s.grand_total)
                 )
-              ) || 0
+              ) || 0.0
 
-            # check if the user accumulated sales has reached the cumulative purchase freebie
-            # check the freebie type and apply the freebie to the sale
-            if claimed_count > 0 do
-              nil
-            else
-              case cumulative_purchase_freebie.reward_type do
-                "product" ->
-                  product =
-                    CommerceFront.Settings.get_product!(cumulative_purchase_freebie.product_id)
+            cumulative_purchase_freebies =
+              Repo.all(
+                from(cf in CumulativePurchaseFreebie,
+                  where:
+                    cf.cumulative_purchase_period_id == ^cumulative_purchase_period.id and
+                      cf.total_cumulative_rp <= ^accumulated_sales
+                )
+              )
 
-                  # add the product to the sale
-                  create_sales_item(%{
-                    item_pv: product.point_value,
-                    img_url: product.img_url,
-                    sales_id: sale.id,
-                    item_name: product.name,
-                    qty: cumulative_purchase_freebie.qty,
-                    item_price: product.retail_price,
-                    remarks: remark
-                  })
+            for cumulative_purchase_freebie <- cumulative_purchase_freebies do
+              # prevent duplicating the same freebie across multiple purchases within the same period
+              remark =
+                "Cumulative Purchase Freebie:  Product ID #{cumulative_purchase_freebie.id}"
 
-                "drp" ->
-                  CommerceFront.Settings.create_wallet_transaction(%{
-                    user_id: user.id,
-                    amount: cumulative_purchase_freebie.drp,
-                    remarks: remark,
-                    wallet_type: "direct_recruitment"
-                  })
+              claimed_count =
+                Repo.one(
+                  from(si in SalesItem,
+                    join: s in Sale,
+                    on: s.id == si.sales_id,
+                    where:
+                      s.user_id == ^user.id and
+                        s.inserted_at >= ^cumulative_purchase_period.start_date and
+                        s.inserted_at <= ^cumulative_purchase_period.end_date and
+                        si.remarks == ^remark,
+                    select: count(si.id)
+                  )
+                ) || 0
 
-                "tp" ->
-                  CommerceFront.Settings.create_wallet_transaction(%{
-                    user_id: user.id,
-                    amount: cumulative_purchase_freebie.tp,
-                    remarks: remark,
-                    wallet_type: "travel"
-                  })
+              # check if the user accumulated sales has reached the cumulative purchase freebie
+              # check the freebie type and apply the freebie to the sale
+              if claimed_count > 0 do
+                nil
+              else
+                case cumulative_purchase_freebie.reward_type do
+                  "product" ->
+                    product =
+                      CommerceFront.Settings.get_product!(cumulative_purchase_freebie.product_id)
 
-                "pp" ->
-                  CommerceFront.Settings.create_wallet_transaction(%{
-                    user_id: user.id,
-                    amount: cumulative_purchase_freebie.pp,
-                    remarks: remark,
-                    wallet_type: "product"
-                  })
+                    # add the product to the sale
+                    create_sales_item(%{
+                      item_pv: product.point_value,
+                      img_url: product.img_url,
+                      sales_id: sale.id,
+                      item_name: product.name,
+                      qty: cumulative_purchase_freebie.qty,
+                      item_price: product.retail_price,
+                      remarks: remark
+                    })
+
+                  "drp" ->
+                    CommerceFront.Settings.create_wallet_transaction(%{
+                      user_id: user.id,
+                      amount: cumulative_purchase_freebie.drp,
+                      remarks: remark,
+                      wallet_type: "direct_recruitment"
+                    })
+
+                  "tp" ->
+                    CommerceFront.Settings.create_wallet_transaction(%{
+                      user_id: user.id,
+                      amount: cumulative_purchase_freebie.tp,
+                      remarks: remark,
+                      wallet_type: "travel"
+                    })
+
+                  "pp" ->
+                    CommerceFront.Settings.create_wallet_transaction(%{
+                      user_id: user.id,
+                      amount: cumulative_purchase_freebie.pp,
+                      remarks: remark,
+                      wallet_type: "product"
+                    })
+                end
               end
             end
           end
         end
+
+        # end if has_dt2_item
 
         {:ok, nil}
       end)
