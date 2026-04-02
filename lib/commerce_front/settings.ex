@@ -5679,23 +5679,7 @@ defmodule CommerceFront.Settings do
         #   crosses the threshold (duplicated freebies).
 
         # need to exclude those products that contains DT2 - malaysia
-        # if the sale_items in this sale contains DT2 items (via product_stocks -> stocks.name = 'DT 2'), skip this function
-        has_dt2_item =
-          Repo.exists?(
-            from(si in CommerceFront.Settings.SalesItem,
-              join: p in CommerceFront.Settings.Product,
-              on: p.name == si.item_name,
-              join: ps in CommerceFront.Settings.ProductStock,
-              on: ps.product_id == p.id,
-              join: s in CommerceFront.Settings.Stock,
-              on: s.id == ps.stock_id,
-              where: si.sales_id == ^sale.id and s.name == ^"DT2"
-            )
-          )
-
-        if has_dt2_item do
-          {:ok, nil}
-        else
+        # DT2-containing sales are excluded from accumulated_sales sum (via product_stocks -> stocks.name = 'DT2')
           now = NaiveDateTime.utc_now()
 
           cumulative_purchase_periods =
@@ -5709,13 +5693,27 @@ defmodule CommerceFront.Settings do
 
           for cumulative_purchase_period <- cumulative_purchase_periods do
             # query the cumulative purchase freebies by cumulative purchase period id
+            # exclude sales that contain DT2 products (product_stocks -> stocks.name = 'DT2')
+            dt2_sales_ids =
+              from(si in CommerceFront.Settings.SalesItem,
+                join: p in CommerceFront.Settings.Product,
+                on: p.name == si.item_name,
+                join: ps in CommerceFront.Settings.ProductStock,
+                on: ps.product_id == p.id,
+                join: st in CommerceFront.Settings.Stock,
+                on: st.id == ps.stock_id,
+                where: st.name == ^"DT2",
+                select: si.sales_id
+              )
+
             accumulated_sales =
               Repo.one(
                 from(s in Sale,
                   where:
                     s.user_id == ^user.id and
                       s.inserted_at >= ^cumulative_purchase_period.start_date and
-                      s.inserted_at <= ^cumulative_purchase_period.end_date,
+                      s.inserted_at <= ^cumulative_purchase_period.end_date and
+                      s.id not in subquery(dt2_sales_ids),
                   select: sum(s.grand_total)
                 )
               ) || 0.0
@@ -5796,9 +5794,6 @@ defmodule CommerceFront.Settings do
               end
             end
           end
-        end
-
-        # end if has_dt2_item
 
         {:ok, nil}
       end)
