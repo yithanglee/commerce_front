@@ -4228,7 +4228,7 @@ defmodule CommerceFront.Settings do
                 # else
 
                 # end
-                if total_rp >= 36 do
+                if total_rp >= 100 do
                   shipping_fee
                 else
                   2

@@ -2686,23 +2686,24 @@ export let commerceApp_ = {
                     s = 0
                 } else {
 
-                    if (["Sabah", "Sarawak", "Labuan"].includes(window.selectedState)) {
-                        // s = Math.ceil(subtotal / 200) * 4
-                        if (subtotal >= 36) {
+                    // if (["Sabah", "Sarawak", "Labuan"].includes(window.selectedState)) {
+                    //     // s = Math.ceil(subtotal / 200) * 4
+                    //     if (subtotal >= 36) {
+                    //         s = 0
+                    //     } else {
+                    //         s = 2
+                    //     }
+                    // } else {
+
+                    // }
+                    if (is_merchant) {
+                        s = Math.ceil(subtotal / 200) * 2
+                    } else {
+
+                        if (subtotal >= 100) {
                             s = 0
                         } else {
                             s = 2
-                        }
-                    } else {
-                        if (is_merchant) {
-                            s = Math.ceil(subtotal / 200) * 2
-                        } else {
-
-                            if (subtotal >= 36) {
-                                s = 0
-                            } else {
-                                s = 2
-                            }
                         }
                     }
                 }
