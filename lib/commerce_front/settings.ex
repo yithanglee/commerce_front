@@ -2147,7 +2147,10 @@ defmodule CommerceFront.Settings do
                       "bank_account_no",
                       "bank_name"
                     ])
-                    |> Map.put("username", attrs["username"] <> "-" <> position)
+                    |> Map.put(
+                      "username",
+                      Map.get(attrs, "username", username) <> "-" <> position
+                    )
                   )
                   |> Repo.update()
                   |> IO.inspect()
@@ -9200,7 +9203,8 @@ defmodule CommerceFront.Settings do
             "img_url" => "",
             "item_name" => "Product Points",
             "item_price" => "#{rp}",
-            "item_pv" => 1,
+            "item_pv" => rp,
+            "remarks" => "Auto Maintenance 20% from Merchant Sales Level Bonus",
             "qty" => "1"
           }
         },
