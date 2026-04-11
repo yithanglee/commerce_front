@@ -22,6 +22,7 @@ defmodule CommerceFront.Settings.Sale do
 
   schema "sales" do
     field(:is_instalment, :boolean, default: false)
+    field(:is_maintenance, :boolean, default: false)
     field(:has_freebies, :boolean, default: false)
     field(:month, :integer)
     field(:remarks, :string)
@@ -59,6 +60,9 @@ defmodule CommerceFront.Settings.Sale do
   def changeset(sale, attrs) do
     sale
     |> cast(attrs, [
+      :is_maintenance,
+      :is_instalment,
+      :has_freebies,
       :merchant_id,
       :shipping_method,
       :shipping_company,
