@@ -9221,6 +9221,7 @@ defmodule CommerceFront.Settings do
       |> Multi.run(:sale, fn _repo, %{} ->
         create_sale(%{
           is_instalment: false,
+          is_maintenance: true,
           pick_up_point_id: nil,
           country_id: "1",
           month: Date.utc_today().month,
