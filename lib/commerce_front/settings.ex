@@ -6275,144 +6275,153 @@ defmodule CommerceFront.Settings do
           )
         )
 
-      pay_to_bonus_wallet = fn reward, multi ->
-        multi
-        |> Multi.run(String.to_atom("reward_#{reward.id}"), fn _repo, %{} ->
-          user = CommerceFront.Settings.get_user!(reward.user_id)
-          username = user.username
-
-          user_id =
-            if user.stockist_user_id != nil do
-              user.stockist_user_id
-            else
-              user.id
-            end
-
-          cond do
-            reward.name == "travel fund" ->
-              params = %{
-                reward_id: reward.id,
-                user_id: reward.user_id,
-                amount: reward.amount |> Float.round(2),
-                remarks: reward.remarks,
-                wallet_type: "travel"
-              }
-
-              case create_wallet_transaction(params) do
-                {:ok, wt} ->
-                  update_reward(reward, %{is_paid: true})
-
-                {:error, cg} ->
-                  {:error, cg}
-              end
-
-            reward.name == "royalty bonus" ->
-              params = %{
-                reward_id: reward.id,
-                user_id: reward.user_id,
-                amount: reward.amount |> Float.round(2),
-                remarks: reward.remarks,
-                wallet_type: "register"
-              }
-
-              case create_wallet_transaction(params) do
-                {:ok, wt} ->
-                  update_reward(reward, %{is_paid: true})
-
-                {:error, cg} ->
-                  {:error, cg}
-              end
-
-            reward.name == "merchant sales level bonus" ->
-              bonus_amount = (reward.amount * 0.8) |> Float.round(2)
-              product_amount = (reward.amount * 0.2) |> Float.round(2)
-
-              params = %{
-                reward_id: reward.id,
-                user_id: user_id,
-                amount: bonus_amount,
-                remarks: reward.remarks <> "|80% bonus split",
-                wallet_type: "bonus"
-              }
-
-              case create_wallet_transaction(params) do
-                {:ok, _wt} ->
-                  CommerceFront.Settings.process_product_wallet_upgrade(
-                    user,
-                    product_amount,
-                    reward
-                  )
-
-                  params2 = %{
-                    reward_id: reward.id,
-                    user_id: user_id,
-                    amount: (reward.amount * 0.2) |> Float.round(2),
-                    remarks: reward.remarks <> "|pay: 20%",
-                    wallet_type: "product"
-                  }
-
-                  create_wallet_transaction(params2)
-
-                  update_reward(reward, %{is_paid: true})
-
-                {:error, cg} ->
-                  {:error, cg}
-              end
-
-            true ->
-              total_this_month = check_this_month_reward.(reward.user_id, month_rewards)
-
-              {amount, remarks} =
-                if bonus not in matrix do
-                  {reward.amount, "month total: #{total_this_month}|pay: 100%"}
-                else
-                  if username == "haho_unpaid" do
-                    {reward.amount, "month total: #{total_this_month}|pay: 100%"}
-                  else
-                    if total_this_month > 10000 do
-                      {reward.amount, "month total: #{total_this_month}|pay: 100%"}
-                    else
-                      {reward.amount * 0.9, "month total: #{total_this_month}|pay: 90%"}
-                    end
-                  end
-                end
-
-              params = %{
-                reward_id: reward.id,
-                user_id: user_id,
-                amount: amount |> Float.round(2),
-                remarks: reward.remarks <> "|" <> remarks,
-                wallet_type: "bonus"
-              }
-
-              case create_wallet_transaction(params) do
-                {:ok, wt} ->
-                  if total_this_month <= 10000 && bonus in matrix && username != "haho_unpaid" do
-                    params2 = %{
-                      reward_id: reward.id,
-                      user_id: user_id,
-                      amount: (reward.amount * 0.1) |> Float.round(2),
-                      remarks:
-                        reward.remarks <> "|" <> "month total: #{total_this_month}|pay: 10%",
-                      wallet_type: "product"
-                    }
-
-                    create_wallet_transaction(params2)
-                  end
-
-                  update_reward(reward, %{is_paid: true})
-
-                {:error, cg} ->
-                  {:error, cg}
-              end
-          end
-        end)
-      end
-
-      Enum.reduce(rewards, Multi.new(), &pay_to_bonus_wallet.(&1, &2))
+      Enum.reduce(
+        rewards,
+        Multi.new(),
+        &pay_to_bonus_wallet_v2(&1, &2, bonus, month_rewards, matrix)
+      )
       |> Repo.transaction()
       |> IO.inspect()
     end
+  end
+
+  def pay_to_bonus_wallet_v2(reward, multi, bonus, month_rewards, matrix) do
+    multi
+    |> Multi.run(String.to_atom("reward_#{reward.id}"), fn _repo, %{} ->
+      user = CommerceFront.Settings.get_user!(reward.user_id)
+      username = user.username
+
+      user_id =
+        if user.stockist_user_id != nil do
+          user.stockist_user_id
+        else
+          user.id
+        end
+
+      cond do
+        reward.name == "travel fund" ->
+          params = %{
+            reward_id: reward.id,
+            user_id: reward.user_id,
+            amount: reward.amount |> Float.round(2),
+            remarks: reward.remarks,
+            wallet_type: "travel"
+          }
+
+          case create_wallet_transaction(params) do
+            {:ok, _wt} ->
+              update_reward(reward, %{is_paid: true})
+
+            {:error, cg} ->
+              {:error, cg}
+          end
+
+        reward.name == "royalty bonus" ->
+          params = %{
+            reward_id: reward.id,
+            user_id: reward.user_id,
+            amount: reward.amount |> Float.round(2),
+            remarks: reward.remarks,
+            wallet_type: "register"
+          }
+
+          case create_wallet_transaction(params) do
+            {:ok, _wt} ->
+              update_reward(reward, %{is_paid: true})
+
+            {:error, cg} ->
+              {:error, cg}
+          end
+
+        reward.name == "merchant sales level bonus" ->
+          bonus_amount = (reward.amount * 0.8) |> Float.round(2)
+          product_amount = (reward.amount * 0.2) |> Float.round(2)
+
+          params = %{
+            reward_id: reward.id,
+            user_id: user_id,
+            amount: bonus_amount,
+            remarks: reward.remarks <> "|80% bonus split",
+            wallet_type: "bonus"
+          }
+
+          case create_wallet_transaction(params) do
+            {:ok, _wt} ->
+              CommerceFront.Settings.process_product_wallet_upgrade(
+                user,
+                product_amount,
+                reward
+              )
+
+              params2 = %{
+                reward_id: reward.id,
+                user_id: user_id,
+                amount: (reward.amount * 0.2) |> Float.round(2),
+                remarks: reward.remarks <> "|pay: 20%",
+                wallet_type: "product"
+              }
+
+              create_wallet_transaction(params2)
+
+              update_reward(reward, %{is_paid: true})
+
+            {:error, cg} ->
+              {:error, cg}
+          end
+
+        true ->
+          total_this_month =
+            month_rewards
+            |> Enum.filter(&(&1.user_id == reward.user_id))
+            |> Enum.filter(&(&1.bonus in matrix))
+            |> Enum.map(& &1.sum)
+            |> Enum.sum()
+
+          {amount, remarks} =
+            if bonus not in matrix do
+              {reward.amount, "month total: #{total_this_month}|pay: 100%"}
+            else
+              if username == "haho_unpaid" do
+                {reward.amount, "month total: #{total_this_month}|pay: 100%"}
+              else
+                if total_this_month > 10000 do
+                  {reward.amount, "month total: #{total_this_month}|pay: 100%"}
+                else
+                  {reward.amount * 0.9, "month total: #{total_this_month}|pay: 90%"}
+                end
+              end
+            end
+
+          params = %{
+            reward_id: reward.id,
+            user_id: user_id,
+            amount: amount |> Float.round(2),
+            remarks: reward.remarks <> "|" <> remarks,
+            wallet_type: "bonus"
+          }
+
+          case create_wallet_transaction(params) do
+            {:ok, _wt} ->
+              if total_this_month <= 10000 && bonus in matrix && username != "haho_unpaid" do
+                params2 = %{
+                  reward_id: reward.id,
+                  user_id: user_id,
+                  amount: (reward.amount * 0.1) |> Float.round(2),
+                  remarks:
+                    reward.remarks <> "|" <> "month total: #{total_this_month}|pay: 10%",
+                  wallet_type: "product"
+                }
+
+                create_wallet_transaction(params2)
+              end
+
+              update_reward(reward, %{is_paid: true})
+
+            {:error, cg} ->
+              {:error, cg}
+          end
+      end
+    end)
   end
 
   def pay_to_bonus_wallet(reward) do

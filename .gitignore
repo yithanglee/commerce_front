@@ -28,3 +28,5 @@ commerce_front-*.tar
 /priv/static/
 
 /media
+
+.env_haho_prod
