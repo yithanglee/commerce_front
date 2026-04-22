@@ -239,16 +239,22 @@ defmodule CommerceFront.Calculation do
     Enum.reduce(uplines, {0.00, 0.00}, &calc.(&1, &2))
   end
 
-  def stockist_register_bonus(sales_person, username, pv, sale) do
-    bonus = (pv * 0.03) |> Float.round(2)
+  def stockist_register_bonus(stockist_user, username, pv, sale) do
+    bonus =
+      if stockist_user.is_stockist do
+        pv * stockist_user.stockist_fee_perc
+      else
+        pv * 0.03
+      end
+      |> Float.round(2)
 
     CommerceFront.Settings.create_reward(%{
       sales_id: sale.id,
       is_paid: false,
-      remarks: "sales-#{sale.id}|#{pv} * 0.03 = #{bonus}|register: #{username}",
+      remarks: "sales-#{sale.id}|#{pv} * #{stockist_user.stockist_fee_perc |> Float.round(2)} = #{bonus}|register: #{username}",
       name: "stockist register bonus",
       amount: bonus,
-      user_id: sales_person.id,
+      user_id: stockist_user.id,
       day: Date.utc_today().day,
       month: Date.utc_today().month,
       year: Date.utc_today().year

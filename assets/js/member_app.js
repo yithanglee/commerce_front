@@ -17,6 +17,12 @@ export let memberApp_ = {
         // $("input[name='user[sponsor]']").val(this.user.username)
         $("input[name='user[username]']").val("")
       }
+      if ($("select[name='user[stockist_user_id]']").length) {
+        if (typeof commerceApp_ !== "undefined" && commerceApp_.initRegisterStockistSelect) {
+          commerceApp_.initRegisterStockistSelect();
+        }
+        $("select[name='user[stockist_user_id]']").val("");
+      }
     }
   },
   override(j) {
@@ -106,7 +112,10 @@ export let memberApp_ = {
         $("input[name='user[sales_person_id]']").val(this.user.id)
 
       }
-
+      if ($("select[name='user[stockist_user_id]']").length) {
+        var stockistId = $("select[name='user[stockist_user_id]']").val() || "";
+        $("select[name='user[stockist_user_id]']").val(stockistId);
+      }
       if (phxApp_.chosen_country_id_ != null) {
         $("input[name='user[country_id]']").val(phxApp_.chosen_country_id_.id)
       }
@@ -194,6 +203,10 @@ export let memberApp_ = {
         $("input[name='user[sales_person_id]']").val(this.user.id)
    
 
+      }
+      if ($("select[name='user[stockist_user_id]']").length) {
+        var stockistId = $("select[name='user[stockist_user_id]']").val() || "";
+        $("select[name='user[stockist_user_id]']").val(stockistId);
       }
       if (phxApp_.chosen_country_id_ != null) {
         console.log(phxApp_.chosen_country_id_)

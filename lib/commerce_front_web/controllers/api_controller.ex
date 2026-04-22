@@ -370,6 +370,9 @@ defmodule CommerceFrontWeb.ApiController do
             |> List.insert_at(1, %{"is_stockist" => user.is_stockist})
             |> List.insert_at(2, user |> BluePotion.sanitize_struct())
 
+        "list_stockist_users" ->
+          Settings.list_stockist_users()
+
         "get_accumulated_sales_merchant" ->
           user = Settings.get_user_by_username(params["username"])
 
@@ -1030,10 +1033,15 @@ defmodule CommerceFrontWeb.ApiController do
         # params["status"]
 
         "pay_reward" ->
-          Settings.pay_unpaid_bonus(
+          # Settings.pay_unpaid_bonus(
+          #   Date.from_erl!({params["year"], params["month"], params["day"]}),
+          #   [params["name"]]
+          # )
+
+          Elixir.Task.start_link(CommerceFront.Settings, :pay_unpaid_bonus, [
             Date.from_erl!({params["year"], params["month"], params["day"]}),
             [params["name"]]
-          )
+          ])
 
           %{status: "ok"}
 

@@ -206,6 +206,78 @@ export let commerceApp_ = {
         })
         return amount
     },
+    initRegisterStockistSelect() {
+        var $sel = $("select#user-stockist-select, select[name='user[stockist_user_id]']");
+        if ($sel.length === 0) return;
+        $sel.find("option:not(:first)").remove();
+        var res = phxApp_.api("list_stockist_users", {});
+        if (res && Array.isArray(res)) {
+            res.forEach(function (u) {
+                var id = u.id != null ? u.id : u["id"];
+                var un = u.username != null ? u.username : u["username"];
+                if (id == null) return;
+                $sel.append($("<option></option>").attr("value", id).text(un));
+            });
+        }
+        if ($sel.attr("data-default-empty") != null) {
+            $sel.val("");
+        }
+        $(document).off("change.userStockist", "select#user-stockist-select, select[name='user[stockist_user_id]']")
+            .on("change.userStockist", "select#user-stockist-select, select[name='user[stockist_user_id]']", function () {
+                commerceApp_.applyStockistDeliveryMode();
+                try {
+                    commerceApp_.components["cartItems"]();
+                } catch (e) { }
+            });
+        commerceApp_.applyStockistDeliveryMode();
+    },
+    applyStockistDeliveryMode() {
+        const $sel = $("select#user-stockist-select, select[name='user[stockist_user_id]']");
+        if ($sel.length === 0) {
+            return;
+        }
+        const v = $sel.val();
+        const hasStockist = v != null && v !== "" && String(v) !== "null";
+        $("[data-stk-delivery-req='1']").each(function () {
+            $(this).removeAttr("data-stk-delivery-req");
+            if ($(this).attr("data-had-html-required") === "1") {
+                $(this).removeAttr("data-had-html-required");
+            } else {
+                $(this).removeAttr("required");
+            }
+        });
+        if (hasStockist) {
+            $("[name='user[pick_up_point_id]']").val("");
+            $(".shipping-form").removeClass("d-none");
+            $(".self-pickup-form").addClass("d-none");
+            $(".self-pickup-sep").addClass("d-none");
+            const markRequired = (name) => {
+                const $f = $("[name='" + name + "']");
+                if (!$f.length) {
+                    return;
+                }
+                if ($f.prop("required")) {
+                    $f.attr("data-stk-delivery-req", "1");
+                    $f.attr("data-had-html-required", "1");
+                } else {
+                    $f.attr("required", "required");
+                    $f.attr("data-stk-delivery-req", "1");
+                }
+            };
+            markRequired("user[shipping][line1]");
+            markRequired("user[shipping][city]");
+            markRequired("user[shipping][postcode]");
+            markRequired("user[shipping][state]");
+            markRequired("user[shipping][phone]");
+            markRequired("user[shipping][fullname]");
+        } else {
+            $(".self-pickup-sep").removeClass("d-none");
+            const pup = $("[name='user[pick_up_point_id]']").val();
+            if (!pup) {
+                $("[name='user[shipping][state]']").attr("required", "required");
+            }
+        }
+    },
     render() {
         // this find all all the related components on the page and transform them.
         // has to be done after rendering page, 
@@ -2104,7 +2176,7 @@ export let commerceApp_ = {
             if (window.stockistTarget == null) {
                 window.stockistTarget = memberApp_.user.username
             } else { }
-            $("input[name='user[stockist_user_id]']").val('')
+            $("input[name='user[stockist_user_id]'], select[name='user[stockist_user_id]']").val('')
             $("stockistTarget").customHtml(`<span>for: <span id="stockistTarget">` + window.stockistTarget + `</span>
        <a class="ms-4" href="javascript:void(0);" aria-stockist=true> <i class="fa fa-edit"></i> Change</a> </span>`)
 
@@ -2136,7 +2208,7 @@ export let commerceApp_ = {
 
                     }, () => {
                         window.stockistTarget = memberApp_.user.username
-                        $("input[name='user[stockist_user_id]']").val(null)
+                        $("input[name='user[stockist_user_id]'], select[name='user[stockist_user_id]']").val(null)
 
                         $(".selectUser").addClass("disabled")
 
@@ -2148,7 +2220,7 @@ export let commerceApp_ = {
 
                             if (res[1].is_stockist) {
                                 window.stockistTargetData = res[2]
-                                $("input[name='user[stockist_user_id]']").val(window.stockistTargetData.id)
+                                $("input[name='user[stockist_user_id]'], select[name='user[stockist_user_id]']").val(window.stockistTargetData.id)
                                 phxApp_.notify("User verified!")
 
                             } else {
@@ -2829,6 +2901,7 @@ export let commerceApp_ = {
                             commerceApp_.components["cartItems"]()
                         })
                     })
+                    commerceApp_.applyStockistDeliveryMode()
                 })
                 if (pageParams.share_code != null) {
 
@@ -2910,6 +2983,7 @@ export let commerceApp_ = {
                                 commerceApp_.components["cartItems"]()
                             })
                         })
+                    commerceApp_.applyStockistDeliveryMode()
                     })
                 }
 
@@ -3253,7 +3327,8 @@ export let commerceApp_ = {
 
 
             try {
-                if ($("input[name='user[stockist_user_id]']").val() != null) {
+                var stVal = $("input[name='user[stockist_user_id]'], select[name='user[stockist_user_id]']").val();
+                if (stVal != null && stVal !== "") {
 
                     shipping_fee = 0
 
@@ -3689,6 +3764,18 @@ export let commerceApp_ = {
                 $(v)[0].onclick = deleteItem
             })
 
+
+            if (is_merchant) {
+                var $mPay = $("input[name='user[payment][method]'][value='merchant_point']")
+                var $oPay = $("input[name='user[payment][method]'][value='only_register_point']")
+                if ($mPay.length && $oPay.length) {
+                    if ($mPay[0].checked && $oPay[0].checked) {
+                        $oPay.prop("checked", false)
+                    } else if (!$mPay[0].checked && !$oPay[0].checked) {
+                        $mPay.prop("checked", true)
+                    }
+                }
+            }
 
             $("input[name='user[payment][method]']").each((i, v) => {
 

@@ -2063,6 +2063,16 @@ defmodule CommerceFront.Settings do
     Repo.all(User)
   end
 
+  def list_stockist_users do
+    Repo.all(
+      from(u in User,
+        where: u.is_stockist == true,
+        order_by: [asc: u.username],
+        select: %{id: u.id, username: u.username}
+      )
+    )
+  end
+
   def get_user!(id) do
     Repo.all(from(u in User, where: u.id == ^id, preload: [:rank, :merchant])) |> List.first()
   end
@@ -5547,7 +5557,7 @@ defmodule CommerceFront.Settings do
       end)
       |> Multi.run(:pgsd, fn _repo, %{user: user, sale: sale, placement: placement} ->
         cond do
-          params["stockist_user_id"] != nil ->
+         sale == nil && params["stockist_user_id"] != nil ->
             {:ok, nil}
 
           params["stockist"] != nil ->
@@ -5569,7 +5579,7 @@ defmodule CommerceFront.Settings do
                                placement: placement
                              } ->
         cond do
-          params["stockist_user_id"] != nil ->
+          sale == nil && params["stockist_user_id"] != nil ->
             {:ok, nil}
 
           params["stockist"] != nil ->
@@ -5613,11 +5623,11 @@ defmodule CommerceFront.Settings do
                                                   stockist_user: stockist_user
                                                 } ->
         unless "merchant" in Map.keys(params) do
-          if sales_person.is_stockist && sale != nil do
-            # stockist_register_bonus(sales_person, user.username, sale.total_point_value, sale)
+
+          if stockist_user && sale != nil do
 
             if sale.total_point_value > 0 do
-              stockist_register_bonus(sales_person, user.username, sale.total_point_value, sale)
+              stockist_register_bonus(stockist_user, user.username, sale.total_point_value, sale)
             else
               if stockist_user != nil do
                 # todo
@@ -6284,6 +6294,43 @@ defmodule CommerceFront.Settings do
       |> IO.inspect()
     end
   end
+
+  @doc """
+  Example session (IEx):
+    import Ecto.Query
+    alias Ecto.Multi
+    alias CommerceFront.{Repo, Settings}
+    alias CommerceFront.Settings.Reward
+    {y, m, d} = ~D[2026-04-20] |> Date.to_erl()
+
+    matrix = ["team bonus", "matching bonus", "elite leader"]
+
+    month_rewards =
+      Repo.all(
+        from(r in Reward,
+          where:
+            r.month == ^m and
+              r.year == ^y,
+          select: %{sum: sum(r.amount), bonus: r.name, user_id: r.user_id},
+          group_by: [r.user_id, r.name]
+        )
+      )
+    reward = Settings.get_reward!(17011 )
+    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+        reward = Settings.get_reward!(17012 )
+    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+        reward = Settings.get_reward!(17013 )
+    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+        reward = Settings.get_reward!(17014 )
+    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+        reward = Settings.get_reward!(17015 )
+    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+        reward = Settings.get_reward!(17016 )
+    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+
+
+
+    """
 
   def pay_to_bonus_wallet_v2(reward, multi, bonus, month_rewards, matrix) do
     multi

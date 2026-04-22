@@ -30,6 +30,7 @@ defmodule CommerceFront.Settings.User do
     # field(:country_id, :integer)
     belongs_to(:country, CommerceFront.Settings.Country)
     field(:is_stockist, :boolean, default: false)
+    field(:stockist_fee_perc, :float, default: 0.03)
     has_one(:placement, CommerceFront.Settings.Placement)
     field(:stockist_user_id, :integer)
 
@@ -47,6 +48,7 @@ defmodule CommerceFront.Settings.User do
       :country_id,
       :is_stockist,
       :stockist_user_id,
+      :stockist_fee_perc,
       :rank_id,
       :email,
       :username,
