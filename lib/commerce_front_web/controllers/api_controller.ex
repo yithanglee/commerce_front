@@ -1970,14 +1970,20 @@ defmodule CommerceFrontWeb.ApiController do
                           #{prefix}.#{i |> String.replace("!", "")} != ^"#{ss}"  #{addon_search}
                           """
                         else
-                          if ss == nil do
-                            """
-                            #{ori_addon_search}
-                            """
-                          else
-                            """
-                            ilike(#{prefix}.#{i}, ^"%#{ss}%")  #{addon_search}
-                            """
+                          cond do
+                            ss == nil ->
+                              """
+                              #{ori_addon_search}
+                              """
+
+                            is_map(ss) ->
+                              """
+                              """
+
+                            true ->
+                              """
+                              ilike(#{prefix}.#{i}, ^"%#{ss}%")  #{addon_search}
+                              """
                           end
                         end
                       else
@@ -1985,6 +1991,7 @@ defmodule CommerceFrontWeb.ApiController do
                       end
                       |> IO.inspect(label: "last check bang")
                     end
+
 
                     check_id.({prefix, i, ss})
                     |> check_date.()
@@ -2005,35 +2012,57 @@ defmodule CommerceFrontWeb.ApiController do
                         ss
                       end
 
-                    unless i |> String.contains?("_id") do
-                      if ss == "true" || ss == "false" do
-                        """
-                        a.#{i} == ^#{ss}  #{addon_search}
-                        """
-                      else
-                        """
-                        ilike(a.#{i}, ^"%#{ss}%")  #{addon_search}
-                        """
-                      end
-                    else
-                      case Integer.parse(ss) do
-                        {ss, _val} ->
-                          """
-                          a.#{i} == ^#{ss}  #{addon_search}
-                          """
-
-                        _ ->
-                          if ss == "true" || ss == "false" do
+                      unless i |> String.contains?("_id") do
+                        cond do
+                          ss == "true" ->
                             """
                             a.#{i} == ^#{ss}  #{addon_search}
                             """
-                          else
+
+                          ss == "false" ->
+                            """
+                            a.#{i} == ^#{ss}  #{addon_search}
+                            """
+
+                          is_map(ss) ->
+                            """
+                            """
+
+                          true ->
                             """
                             ilike(a.#{i}, ^"%#{ss}%")  #{addon_search}
                             """
-                          end
+                        end
+                      else
+                        case Integer.parse(ss) do
+                          {ss, _val} ->
+                            """
+                            a.#{i} == ^#{ss}  #{addon_search}
+                            """
+
+                          _ ->
+                            cond do
+                              ss == "true" ->
+                                """
+                                a.#{i} == ^#{ss}  #{addon_search}
+                                """
+
+                              ss == "false" ->
+                                """
+                                a.#{i} == ^#{ss}  #{addon_search}
+                                """
+
+                              is_map(ss) ->
+                                """
+                                """
+
+                              true ->
+                                """
+                                ilike(a.#{i}, ^"%#{ss}%")  #{addon_search}
+                                """
+                            end
+                        end
                       end
-                    end
                   end
                 end
                 |> Enum.reject(&(&1 == nil))
