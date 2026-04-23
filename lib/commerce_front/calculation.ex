@@ -239,19 +239,25 @@ defmodule CommerceFront.Calculation do
     Enum.reduce(uplines, {0.00, 0.00}, &calc.(&1, &2))
   end
 
-  def stockist_register_bonus(stockist_user, username, _pv, sale) do
-    bonus =
-      if stockist_user.is_stockist do
-        sale.subtotal * stockist_user.stockist_fee_perc
+  def stockist_register_bonus(stockist_user, username, pv, sale) do
+    # Use new logic (sale.subtotal) from 1st May 2026 onwards
+    # Before that, use old logic (pv/total_point_value)
+    cutoff_date = ~D[2026-05-01]
+    today = Date.utc_today()
+
+    {calc_base, remarks_pv} =
+      if today >= cutoff_date do
+        {sale.subtotal, sale.subtotal}
       else
-        sale.subtotal * 0.03
+        {pv, pv}
       end
-      |> Float.round(2)
+
+    bonus = calc_base * stockist_user.stockist_fee_perc |> Float.round(2)
 
     CommerceFront.Settings.create_reward(%{
       sales_id: sale.id,
       is_paid: false,
-      remarks: "sales-#{sale.id}|#{sale.subtotal} * #{stockist_user.stockist_fee_perc |> Float.round(2)} = #{bonus}|register: #{username}",
+      remarks: "sales-#{sale.id}|#{remarks_pv} * #{stockist_user.stockist_fee_perc |> Float.round(2)} = #{bonus}|register: #{username}",
       name: "stockist register bonus",
       amount: bonus,
       user_id: stockist_user.id,
