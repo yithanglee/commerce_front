@@ -1057,6 +1057,78 @@ defmodule CommerceFront.Settings do
     end
   end
 
+  @doc """
+  Latest posted balance for a wallet type (from the most recent `WalletTransaction`),
+  or `0.0` if the user has no ledger row for that wallet yet.
+  """
+  def wallet_available_balance(user_id, wallet_type) when is_binary(wallet_type) do
+    case get_latest_wallet_transaction_by_user_id(user_id, wallet_type) do
+      nil -> 0.0
+      wt -> wt.after |> Float.round(2)
+    end
+  end
+
+  @doc """
+  Deducts a training / event fee using `create_wallet_transaction/1` in order:
+  travel → register → bonus. Negative amounts are posted per wallet leg.
+
+  Returns `{:ok, %{deductions: [{wallet_type, amount}], amount: total}}` or
+  `{:error, {:insufficient_balance, remainder, balances}}`.
+  """
+  def deduct_training_fee_travel_register_bonus(user_id, amount, remarks)
+      when is_integer(user_id) and is_binary(remarks) do
+    amount = amount |> training_fee_to_float() |> Float.round(2)
+
+    cond do
+      amount <= 0 ->
+        {:error, :invalid_amount}
+
+      true ->
+        travel = wallet_available_balance(user_id, "travel")
+        register = wallet_available_balance(user_id, "register")
+        bonus = wallet_available_balance(user_id, "bonus")
+
+        from_travel = min(travel, amount) |> Float.round(2)
+        rem1 = (amount - from_travel) |> Float.round(2)
+        from_register = min(register, rem1) |> Float.round(2)
+        rem2 = (rem1 - from_register) |> Float.round(2)
+        from_bonus = min(bonus, rem2) |> Float.round(2)
+        remainder = (rem2 - from_bonus) |> Float.round(2)
+
+        if remainder > 0.0 do
+          {:error,
+           {:insufficient_balance, remainder,
+            %{travel: travel, register: register, bonus: bonus}}}
+        else
+          legs =
+            [{"travel", from_travel}, {"register", from_register}, {"bonus", from_bonus}]
+            |> Enum.filter(fn {_, a} -> a > 0.0 end)
+
+          Enum.reduce_while(legs, {:ok, []}, fn {wt, amt}, {:ok, acc} ->
+            case create_wallet_transaction(%{
+                   user_id: user_id,
+                   amount: amt * -1.0,
+                   remarks: remarks,
+                   wallet_type: wt
+                 }) do
+              {:ok, _} -> {:cont, {:ok, [{wt, amt} | acc]}}
+              {:error, _} = err -> {:halt, err}
+            end
+          end)
+          |> case do
+            {:ok, list} ->
+              {:ok, %{deductions: Enum.reverse(list), amount: amount}}
+
+            err ->
+              err
+          end
+        end
+    end
+  end
+
+  defp training_fee_to_float(n) when is_integer(n), do: n * 1.0
+  defp training_fee_to_float(n) when is_float(n), do: n
+
   def update_ewallet(model, params) do
     Ewallet.changeset(model, params) |> Repo.update() |> IO.inspect()
   end
@@ -5640,19 +5712,19 @@ defmodule CommerceFront.Settings do
                     sale
                   )
 
-                rb =
-                  biz_incentive_bonus(
-                    sales_person,
-                    user.username,
-                    sale.subtotal |> :erlang.trunc(),
-                    sale
-                  )
+                rb = 0
+                  # biz_incentive_bonus(
+                  #   sales_person,
+                  #   user.username,
+                  #   sale.subtotal |> :erlang.trunc(),
+                  #   sale
+                  # )
 
-                rc =
-                  CommerceFront.Calculation.matching_biz_incentive_bonus(
-                    Date.utc_today().month,
-                    Date.utc_today().year
-                  )
+                rc = 0
+                  # CommerceFront.Calculation.matching_biz_incentive_bonus(
+                  #   Date.utc_today().month,
+                  #   Date.utc_today().year
+                  # )
 
                 IO.inspect([ra, rb, rc])
               else
