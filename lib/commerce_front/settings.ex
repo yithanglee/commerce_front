@@ -5708,7 +5708,7 @@ defmodule CommerceFront.Settings do
                   stockist_register_bonus(
                     stockist_user,
                     user.username,
-                    sale.subtotal |> :erlang.trunc(),
+                    sale.total_point_value,
                     sale
                   )
 
