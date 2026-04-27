@@ -254,8 +254,8 @@ defmodule CommerceFront.Calculation do
 
     {bonus, perc} =
       if today >= cutoff_date do
-        {(calc_base * stockist_user.stockist_fee_perc) |> Float.round(2),
-         stockist_user.stockist_fee_perc}
+        {(calc_base * 0.03) |> Float.round(2),
+         0.03}
       else
         {(calc_base * stockist_user.stockist_fee_perc) |> Float.round(2),
          stockist_user.stockist_fee_perc}
@@ -265,7 +265,7 @@ defmodule CommerceFront.Calculation do
       sales_id: sale.id,
       is_paid: false,
       remarks:
-        "sales-#{sale.id}|#{remarks_pv} * #{stockist_user.stockist_fee_perc |> Float.round(2)} = #{bonus}|register: #{username}",
+        "sales-#{sale.id}|#{remarks_pv} * #{perc |> Float.round(2)} = #{bonus}|register: #{username}",
       name: "stockist register bonus",
       amount: bonus,
       user_id: stockist_user.id,
