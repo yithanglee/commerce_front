@@ -5746,21 +5746,12 @@ defmodule CommerceFront.Settings do
                     stockist_register_bonus(
                       stockist_user,
                       user.username,
-                      sale.subtotal |> :erlang.trunc(),
+                      sale.total_point_value,
                       sale
                     )
 
-                  rb =
-                    biz_incentive_bonus(
-                      sales_person,
-                      user.username,
-                      sale.subtotal |> :erlang.trunc(),
-                      sale
-                    )
 
-                  rc = matching_biz_incentive_bonus(Date.utc_today().month, Date.utc_today().year)
 
-                  IO.inspect([ra, rb, rc])
                 else
                 end
 
