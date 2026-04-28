@@ -1097,8 +1097,7 @@ defmodule CommerceFront.Settings do
 
         if remainder > 0.0 do
           {:error,
-           {:insufficient_balance, remainder,
-            %{travel: travel, register: register, bonus: bonus}}}
+           {:insufficient_balance, remainder, %{travel: travel, register: register, bonus: bonus}}}
         else
           legs =
             [{"travel", from_travel}, {"register", from_register}, {"bonus", from_bonus}]
@@ -2422,7 +2421,7 @@ defmodule CommerceFront.Settings do
 
     list = check_downlines(username)
 
-    tree = display_tree(username, list, [], :placement, false, 0, full)
+    tree = display_tree(username, list, [], :placement, false, 0, full, 8)
 
     if tree != nil do
       [fl_child, far_left_data] = far_node("left", username, %{})
@@ -2453,7 +2452,7 @@ defmodule CommerceFront.Settings do
 
       tree =
         if tree == %{} do
-          display_tree(username, list, [], :placement, false, 0, true)
+          display_tree(username, list, [], :placement, false, 0, true, 8)
         else
           tree
         end
@@ -2553,7 +2552,7 @@ defmodule CommerceFront.Settings do
   @doc """
 
   list = CommerceFront.Settings.check_downlines("elis", true)
-      tree = CommerceFront.Settings.display_tree("elis", list, [], :placement, false, 0, full)
+      tree = CommerceFront.Settings.display_tree("elis", list, [], :placement, false, 0, full, 8)
   """
   def display_tree(
         username \\ "damien",
@@ -2562,7 +2561,8 @@ defmodule CommerceFront.Settings do
         tree \\ :placement,
         include_empty \\ true,
         count,
-        full \\ false
+        full \\ false,
+        max_depth \\ 8
       ) do
     Logger.info("[display tree] - Count: #{count} - #{username}")
 
@@ -2751,29 +2751,39 @@ defmodule CommerceFront.Settings do
           sum_right
         ] = list
 
-        display_tree(
-          username,
-          ori_data,
-          transformed_children |> Enum.uniq(),
-          tree,
-          include_empty,
-          count + 1,
-          full
-        )
+        if count + 1 >= max_depth do
+          to_map.(Enum.join(list, "|"))
+        else
+          display_tree(
+            username,
+            ori_data,
+            transformed_children |> Enum.uniq(),
+            tree,
+            include_empty,
+            count + 1,
+            full,
+            max_depth
+          )
+        end
       else
         [username, id, fullname, rank_name, sum_left, sum_right] = list
 
         # map = ori_data |> Enum.filter(&(&1.parent_username == username)) |> List.first()
 
-        display_tree(
-          username,
-          ori_data,
-          transformed_children,
-          :referral,
-          include_empty,
-          count + 1,
-          full
-        )
+        if count + 1 >= max_depth do
+          to_map.(Enum.join(list, "|"))
+        else
+          display_tree(
+            username,
+            ori_data,
+            transformed_children,
+            :referral,
+            include_empty,
+            count + 1,
+            full,
+            max_depth
+          )
+        end
       end
     end
 
@@ -5629,7 +5639,7 @@ defmodule CommerceFront.Settings do
       end)
       |> Multi.run(:pgsd, fn _repo, %{user: user, sale: sale, placement: placement} ->
         cond do
-         sale == nil && params["stockist_user_id"] != nil ->
+          sale == nil && params["stockist_user_id"] != nil ->
             {:ok, nil}
 
           params["stockist"] != nil ->
@@ -5695,9 +5705,7 @@ defmodule CommerceFront.Settings do
                                                   stockist_user: stockist_user
                                                 } ->
         unless "merchant" in Map.keys(params) do
-
           if stockist_user && sale != nil do
-
             if sale.total_point_value > 0 do
               stockist_register_bonus(stockist_user, user.username, sale.total_point_value, sale)
             else
@@ -5713,18 +5721,18 @@ defmodule CommerceFront.Settings do
                   )
 
                 rb = 0
-                  # biz_incentive_bonus(
-                  #   sales_person,
-                  #   user.username,
-                  #   sale.subtotal |> :erlang.trunc(),
-                  #   sale
-                  # )
+                # biz_incentive_bonus(
+                #   sales_person,
+                #   user.username,
+                #   sale.subtotal |> :erlang.trunc(),
+                #   sale
+                # )
 
                 rc = 0
-                  # CommerceFront.Calculation.matching_biz_incentive_bonus(
-                  #   Date.utc_today().month,
-                  #   Date.utc_today().year
-                  # )
+                # CommerceFront.Calculation.matching_biz_incentive_bonus(
+                #   Date.utc_today().month,
+                #   Date.utc_today().year
+                # )
 
                 IO.inspect([ra, rb, rc])
               else
@@ -5749,9 +5757,6 @@ defmodule CommerceFront.Settings do
                       sale.total_point_value,
                       sale
                     )
-
-
-
                 else
                 end
 
@@ -6360,40 +6365,40 @@ defmodule CommerceFront.Settings do
 
   @doc """
   Example session (IEx):
-    import Ecto.Query
-    alias Ecto.Multi
-    alias CommerceFront.{Repo, Settings}
-    alias CommerceFront.Settings.Reward
-    {y, m, d} = ~D[2026-04-20] |> Date.to_erl()
+  import Ecto.Query
+  alias Ecto.Multi
+  alias CommerceFront.{Repo, Settings}
+  alias CommerceFront.Settings.Reward
+  {y, m, d} = ~D[2026-04-20] |> Date.to_erl()
 
-    matrix = ["team bonus", "matching bonus", "elite leader"]
+  matrix = ["team bonus", "matching bonus", "elite leader"]
 
-    month_rewards =
-      Repo.all(
-        from(r in Reward,
-          where:
-            r.month == ^m and
-              r.year == ^y,
-          select: %{sum: sum(r.amount), bonus: r.name, user_id: r.user_id},
-          group_by: [r.user_id, r.name]
-        )
+  month_rewards =
+    Repo.all(
+      from(r in Reward,
+        where:
+          r.month == ^m and
+            r.year == ^y,
+        select: %{sum: sum(r.amount), bonus: r.name, user_id: r.user_id},
+        group_by: [r.user_id, r.name]
       )
-    reward = Settings.get_reward!(17011 )
-    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
-        reward = Settings.get_reward!(17012 )
-    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
-        reward = Settings.get_reward!(17013 )
-    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
-        reward = Settings.get_reward!(17014 )
-    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
-        reward = Settings.get_reward!(17015 )
-    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
-        reward = Settings.get_reward!(17016 )
-    Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+    )
+  reward = Settings.get_reward!(17011 )
+  Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+      reward = Settings.get_reward!(17012 )
+  Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+      reward = Settings.get_reward!(17013 )
+  Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+      reward = Settings.get_reward!(17014 )
+  Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+      reward = Settings.get_reward!(17015 )
+  Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
+      reward = Settings.get_reward!(17016 )
+  Settings.pay_to_bonus_wallet_v2(reward, Multi.new(), "merchant sales level bonus", month_rewards, matrix) |> Repo.transaction() |> IO.inspect()
 
 
 
-    """
+  """
 
   def pay_to_bonus_wallet_v2(reward, multi, bonus, month_rewards, matrix) do
     multi
@@ -6517,8 +6522,7 @@ defmodule CommerceFront.Settings do
                   reward_id: reward.id,
                   user_id: user_id,
                   amount: (reward.amount * 0.1) |> Float.round(2),
-                  remarks:
-                    reward.remarks <> "|" <> "month total: #{total_this_month}|pay: 10%",
+                  remarks: reward.remarks <> "|" <> "month total: #{total_this_month}|pay: 10%",
                   wallet_type: "product"
                 }
 
