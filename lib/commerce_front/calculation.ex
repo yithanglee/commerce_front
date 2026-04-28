@@ -254,7 +254,7 @@ defmodule CommerceFront.Calculation do
       |> IO.inspect(label: "calc_base, remarks_pv")
 
     {bonus, perc} =
-      if today >= cutoff_date do
+      if Date.compare(today, cutoff_date) == :gt do
         {(calc_base * 0.03) |> Float.round(2),
          0.03}
       else
