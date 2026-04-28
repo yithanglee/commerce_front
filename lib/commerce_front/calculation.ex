@@ -1550,6 +1550,13 @@ defmodule CommerceFront.Calculation do
       ]
 
       for %{name: star_name, qualify: amount} = star <- matrix do
+        rate =
+          case star_name do
+            "1star" -> 0.015
+            "2star" -> 0.015
+            _ -> 0.01
+          end
+
         one_star_qualifier =
           for weak_leg <- users_weak_leg do
             weak_amount =
@@ -1578,7 +1585,7 @@ defmodule CommerceFront.Calculation do
         # if got other members, exclude haho_unpaid
 
         if count > 0 do
-          one_star_amount = total_sales_pv * 0.01 / count
+          one_star_amount = total_sales_pv * rate / count
 
           for weak_leg <- one_star_qualifier do
             weak_amount =
@@ -1592,7 +1599,7 @@ defmodule CommerceFront.Calculation do
               sales_id: 0,
               is_paid: false,
               remarks:
-                "#{total_sales_pv} * 0.01/ #{count} = #{one_star_amount |> :erlang.float_to_binary(decimals: 2)}|weak_leg: #{weak_amount}|pool qualifiers: #{count}|#{star_name}",
+                "#{total_sales_pv} * #{rate}/ #{count} = #{one_star_amount |> :erlang.float_to_binary(decimals: 2)}|weak_leg: #{weak_amount}|pool qualifiers: #{count}|#{star_name}",
               name: "elite leader",
               amount: one_star_amount |> Float.round(2),
               user_id: weak_leg.user_id,
@@ -1728,7 +1735,7 @@ defmodule CommerceFront.Calculation do
         |> Enum.map(& &1.total_pv)
         |> Enum.sum()
 
-      allocated = month_pv * 0.05
+      allocated = month_pv * 0.04
 
       check =
         CommerceFront.Settings.today_bonus("travel fund", end_date)
