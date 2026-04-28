@@ -2562,7 +2562,7 @@ defmodule CommerceFront.Settings do
         include_empty \\ true,
         count,
         full \\ false,
-        max_depth \\ 8
+        max_depth \\ 4
       ) do
     Logger.info("[display tree] - Count: #{count} - #{username}")
 
@@ -6086,7 +6086,6 @@ defmodule CommerceFront.Settings do
     |> join(:left, [m], pt in "placement_tree", on: m.id == pt.user_id)
     |> join(:left, [m, pt], m2 in User, on: m2.id == pt.parent_user_id)
     |> join(:left, [m, pt, m2], r in Rank, on: m2.rank_id == r.id)
-    |> where([m, pt, m2], m.id <= ^child_user_id)
     |> where([m, pt, m2], not is_nil(m2.id))
     |> select_statement.()
     |> order_by([m, pt, m2], desc: m.id)
