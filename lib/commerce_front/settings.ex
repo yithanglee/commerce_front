@@ -5794,11 +5794,9 @@ defmodule CommerceFront.Settings do
 
           {:ok, nil}
         else
-          if params["stockist"] != nil || stockist_user != nil do
-            {:ok, nil}
-          else
             # 22/3 pay to sponsor...
             # 23/5 pay to sales person
+            # 30/4/26 form has stockist selection now, need to pay sponsor regardless
 
             unless "merchant" in Map.keys(params) do
               special_share_reward(
@@ -5809,8 +5807,7 @@ defmodule CommerceFront.Settings do
               )
             end
 
-            {:ok, nil}
-          end
+          {:ok, nil}
         end
       end)
       |> Multi.run(:cumulative_purchase_freebie, fn _repo, %{sale: sale, user: user} ->
