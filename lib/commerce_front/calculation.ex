@@ -246,20 +246,22 @@ defmodule CommerceFront.Calculation do
     today = Date.utc_today()
 
     {calc_base, remarks_pv} =
-      if today >= cutoff_date do
+      if Date.compare(today, cutoff_date) == :gt do
         {sale.subtotal, sale.subtotal}
       else
         {pv, pv}
       end
+      |> IO.inspect(label: "calc_base, remarks_pv")
 
     {bonus, perc} =
-      if today >= cutoff_date do
+      if Date.compare(today, cutoff_date) == :gt do
         {(calc_base * 0.03) |> Float.round(2),
          0.03}
       else
         {(calc_base * stockist_user.stockist_fee_perc) |> Float.round(2),
          stockist_user.stockist_fee_perc}
       end
+      |> IO.inspect(label: "bonus, perc")
 
     CommerceFront.Settings.create_reward(%{
       sales_id: sale.id,
@@ -273,6 +275,7 @@ defmodule CommerceFront.Calculation do
       month: Date.utc_today().month,
       year: Date.utc_today().year
     })
+    |> IO.inspect(label: "reward")
   end
 
   def biz_incentive_bonus(sales_person, username, pv, sale) do
