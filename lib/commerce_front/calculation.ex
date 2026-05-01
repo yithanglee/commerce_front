@@ -255,8 +255,7 @@ defmodule CommerceFront.Calculation do
 
     {bonus, perc} =
       if Date.compare(today, cutoff_date) == :gt do
-        {(calc_base * 0.03) |> Float.round(2),
-         0.03}
+        {(calc_base * 0.03) |> Float.round(2), 0.03}
       else
         {(calc_base * stockist_user.stockist_fee_perc) |> Float.round(2),
          stockist_user.stockist_fee_perc}
@@ -1750,7 +1749,7 @@ defmodule CommerceFront.Calculation do
 
         rewards =
           calculation
-          |> Enum.filter(&(&1 |> elem(0) > 0))
+          |> Enum.filter(&(&1 |> elem(1) |> Enum.count() > 0))
           |> Enum.map(&(&1 |> elem(1)))
           |> List.flatten()
 
