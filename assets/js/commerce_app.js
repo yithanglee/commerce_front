@@ -3488,7 +3488,7 @@ export let commerceApp_ = {
                                     $("#drp_payment").attr("min", minOverrideDrp)
                                     $("#drp_payment").attr("value", minOverrideDrp)
                                 } else {
-                                    $("#drp_payment").attr("max", wallet.total)
+                                    $("#drp_payment").attr("max", wallet.total * 0.8)
                                     $("#drp_payment").attr("min", Math.round(subtotal * 0.5))
                                     $("#drp_payment").attr("value", Math.round(subtotal * 0.5))
 
