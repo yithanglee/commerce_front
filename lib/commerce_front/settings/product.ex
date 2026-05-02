@@ -34,6 +34,7 @@ defmodule CommerceFront.Settings.Product do
 
     field(:override_pv, :boolean, default: false)
     field(:override_perc, :float, default: 0.5)
+    field(:override_perc_max, :float, default: 0.8)
     field(:override_special_share_payout, :boolean, default: false)
     field(:override_special_share_payout_perc, :float, default: 0.5)
 
@@ -56,6 +57,7 @@ defmodule CommerceFront.Settings.Product do
       :instalment_id,
       :is_instalment,
       :override_perc,
+      :override_perc_max,
       :override_pv,
       :override_pv_amount,
       :override_special_share_payout_perc,

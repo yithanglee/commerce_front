@@ -1373,6 +1373,7 @@ defmodule CommerceFrontWeb.ApiController do
     append_session = fn conn ->
       # conn |> put_session(:test_session, %{id: 1, role: "tester"})
       conn
+
     end
 
     conn
@@ -1992,7 +1993,6 @@ defmodule CommerceFrontWeb.ApiController do
                       |> IO.inspect(label: "last check bang")
                     end
 
-
                     check_id.({prefix, i, ss})
                     |> check_date.()
                     |> check_bool.()
@@ -2012,57 +2012,57 @@ defmodule CommerceFrontWeb.ApiController do
                         ss
                       end
 
-                      unless i |> String.contains?("_id") do
-                        cond do
-                          ss == "true" ->
-                            """
-                            a.#{i} == ^#{ss}  #{addon_search}
-                            """
+                    unless i |> String.contains?("_id") do
+                      cond do
+                        ss == "true" ->
+                          """
+                          a.#{i} == ^#{ss}  #{addon_search}
+                          """
 
-                          ss == "false" ->
-                            """
-                            a.#{i} == ^#{ss}  #{addon_search}
-                            """
+                        ss == "false" ->
+                          """
+                          a.#{i} == ^#{ss}  #{addon_search}
+                          """
 
-                          is_map(ss) ->
-                            """
-                            """
+                        is_map(ss) ->
+                          """
+                          """
 
-                          true ->
-                            """
-                            ilike(a.#{i}, ^"%#{ss}%")  #{addon_search}
-                            """
-                        end
-                      else
-                        case Integer.parse(ss) do
-                          {ss, _val} ->
-                            """
-                            a.#{i} == ^#{ss}  #{addon_search}
-                            """
-
-                          _ ->
-                            cond do
-                              ss == "true" ->
-                                """
-                                a.#{i} == ^#{ss}  #{addon_search}
-                                """
-
-                              ss == "false" ->
-                                """
-                                a.#{i} == ^#{ss}  #{addon_search}
-                                """
-
-                              is_map(ss) ->
-                                """
-                                """
-
-                              true ->
-                                """
-                                ilike(a.#{i}, ^"%#{ss}%")  #{addon_search}
-                                """
-                            end
-                        end
+                        true ->
+                          """
+                          ilike(a.#{i}, ^"%#{ss}%")  #{addon_search}
+                          """
                       end
+                    else
+                      case Integer.parse(ss) do
+                        {ss, _val} ->
+                          """
+                          a.#{i} == ^#{ss}  #{addon_search}
+                          """
+
+                        _ ->
+                          cond do
+                            ss == "true" ->
+                              """
+                              a.#{i} == ^#{ss}  #{addon_search}
+                              """
+
+                            ss == "false" ->
+                              """
+                              a.#{i} == ^#{ss}  #{addon_search}
+                              """
+
+                            is_map(ss) ->
+                              """
+                              """
+
+                            true ->
+                              """
+                              ilike(a.#{i}, ^"%#{ss}%")  #{addon_search}
+                              """
+                          end
+                      end
+                    end
                   end
                 end
                 |> Enum.reject(&(&1 == nil))

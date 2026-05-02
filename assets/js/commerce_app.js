@@ -3468,19 +3468,25 @@ export let commerceApp_ = {
 
                                 // check if the cart has item that's override_pv 
                                 if (hasOverride) {
-                                    var reg_pv = subtotal * 0.7;
 
-                                    console.info("here ovier")
                                     var subtotal2 = cart.map((v, i) => {
                                         return (v.qty * v.retail_price * v.override_perc)
                                     }).reduce((a, b) => {
                                         return a + b
                                     }, 0)
+                                    var subtotal3 = cart.map((v, i) => {
+                                        var overridePercMax = typeof v.override_perc_max === "number" ? v.override_perc_max : 0.8
+                                        return (v.qty * v.retail_price * overridePercMax)
+                                    }).reduce((a, b) => {
+                                        return a + b
+                                    }, 0)
 
 
-                                    $("#drp_payment").attr("max", subtotal * 0.8)
-                                    $("#drp_payment").attr("min", Math.round(subtotal2))
-                                    $("#drp_payment").attr("value", Math.round(subtotal2))
+                                    var minOverrideDrp = Math.round(subtotal2)
+                                    var maxOverrideDrp = Math.max(minOverrideDrp, Math.round(subtotal3))
+                                    $("#drp_payment").attr("max", maxOverrideDrp)
+                                    $("#drp_payment").attr("min", minOverrideDrp)
+                                    $("#drp_payment").attr("value", minOverrideDrp)
                                 } else {
                                     $("#drp_payment").attr("max", wallet.total)
                                     $("#drp_payment").attr("min", Math.round(subtotal * 0.5))

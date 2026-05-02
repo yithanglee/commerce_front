@@ -5459,8 +5459,8 @@ defmodule CommerceFront.Settings do
           end
         else
           rank = get_rank!(params["rank_id"])
-
-          create_user(params |> Map.put("rank_name", rank.name))
+          # 2/5 here probably need to remove the stockist user id from the params
+          create_user(params |> Map.put("rank_name", rank.name) |> Map.delete("stockist_user_id"))
         end
       end)
       |> Multi.run(:ewallets, fn _repo, %{user: user} ->
