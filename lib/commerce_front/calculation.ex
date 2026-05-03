@@ -258,7 +258,7 @@ defmodule CommerceFront.Calculation do
       sales_id: sale.id,
       is_paid: false,
       remarks:
-        "sales-#{sale.id}|#{remarks_pv} * #{perc |> Float.round(2)} = #{bonus}|register: #{username}",
+        "sales-#{sale.id}|#{remarks_pv} * #{perc |> Float.round(3)} = #{bonus}|register: #{username}",
       name: "stockist register bonus",
       amount: bonus,
       user_id: stockist_user.id,

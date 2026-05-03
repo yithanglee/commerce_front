@@ -9,6 +9,8 @@ defmodule CommerceFront.Admin do
   @doc """
   Evaluates Elixir code string and returns the result.
   All executions are logged with timestamp and code for audit trail.
+  
+  Automatically imports Ecto.Query and aliases CommerceFront.Repo for convenience.
 
   ## Parameters
     - code: String containing Elixir code to evaluate
@@ -28,8 +30,16 @@ defmodule CommerceFront.Admin do
     Logger.debug("[ADMIN_CODE_EVAL] code=#{code}")
 
     try do
+      # Prepend common imports/aliases for database queries
+      preamble = """
+      import Ecto.Query
+      alias CommerceFront.Repo
+      """
+      
+      full_code = preamble <> "\n" <> code
+      
       # Evaluate the code with the provided environment
-      {result, _binding} = Code.eval_string(code, [], __ENV__)
+      {result, _binding} = Code.eval_string(full_code, [], __ENV__)
       
       Logger.info("[ADMIN_CODE_EVAL] timestamp=#{timestamp} status=success")
       
