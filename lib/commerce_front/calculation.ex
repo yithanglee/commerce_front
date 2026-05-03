@@ -246,20 +246,12 @@ defmodule CommerceFront.Calculation do
     today = Date.utc_today()
 
     {calc_base, remarks_pv} =
-      if Date.compare(today, cutoff_date) == :gt do
-        {sale.subtotal, sale.subtotal}
-      else
-        {pv, pv}
-      end
+      {sale.subtotal, sale.subtotal}
       |> IO.inspect(label: "calc_base, remarks_pv")
 
     {bonus, perc} =
-      if Date.compare(today, cutoff_date) == :gt do
-        {(calc_base * 0.03) |> Float.round(2), 0.03}
-      else
-        {(calc_base * stockist_user.stockist_fee_perc) |> Float.round(2),
-         stockist_user.stockist_fee_perc}
-      end
+      {(calc_base * stockist_user.stockist_fee_perc) |> Float.round(2),
+       stockist_user.stockist_fee_perc}
       |> IO.inspect(label: "bonus, perc")
 
     CommerceFront.Settings.create_reward(%{

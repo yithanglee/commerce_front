@@ -5794,18 +5794,18 @@ defmodule CommerceFront.Settings do
 
           {:ok, nil}
         else
-            # 22/3 pay to sponsor...
-            # 23/5 pay to sales person
-            # 30/4/26 form has stockist selection now, need to pay sponsor regardless
+          # 22/3 pay to sponsor...
+          # 23/5 pay to sales person
+          # 30/4/26 form has stockist selection now, need to pay sponsor regardless
 
-            unless "merchant" in Map.keys(params) do
-              special_share_reward(
-                referral.parent_user_id,
-                sale.total_point_value,
-                sale,
-                params["scope"]
-              )
-            end
+          unless "merchant" in Map.keys(params) do
+            special_share_reward(
+              referral.parent_user_id,
+              sale.total_point_value,
+              sale,
+              params["scope"]
+            )
+          end
 
           {:ok, nil}
         end
@@ -6026,6 +6026,25 @@ defmodule CommerceFront.Settings do
 
   def get_user_by_username(username) do
     Repo.get_by(User, username: username)
+  end
+
+  @doc """
+  Update a user's is_stockist flag.
+
+  ## Examples
+
+      iex> update_user_stockist_flag("beta_tester", false)
+      {:ok, %User{}}
+
+  """
+  def update_user_stockist_flag(username, is_stockist_value) do
+    user = get_user_by_username(username)
+
+    if user == nil do
+      {:error, "User not found"}
+    else
+      User.changeset(user, %{is_stockist: is_stockist_value}) |> Repo.update()
+    end
   end
 
   def check_uplines(child_username, tree \\ :placement) do

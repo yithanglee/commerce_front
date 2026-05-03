@@ -70,6 +70,18 @@ defmodule CommerceFrontWeb.Router do
     plug(CommerceFront.ApiAuthorization)
   end
 
+  pipeline :admin_api do
+    plug :accepts, ["json"]
+    plug CORSPlug,
+      origin: [
+        "https://admin.haho2u.com",
+        "http://admin.haho2u.com",
+        "http://localhost:5174",
+        "http://localhost:5173"
+      ]
+    # Note: Authorization is handled in the controller
+  end
+
   scope "/svt_api", CommerceFrontWeb do
     pipe_through :svt_api
     get "/stream", ApiController, :stream_get
@@ -113,6 +125,15 @@ defmodule CommerceFrontWeb.Router do
     get("/:model", ApiController, :datatable)
     post("/:model", ApiController, :form_submission)
     delete("/:model/:id", ApiController, :delete_data)
+  end
+
+  # Admin endpoint for Code.eval and database operations
+  scope "/admin", CommerceFrontWeb do
+    pipe_through :admin_api
+    
+    post "/eval", AdminController, :eval
+    post "/db_query", AdminController, :db_query
+    get "/logs", AdminController, :logs
   end
 
   scope "/html/:lang", CommerceFrontWeb do
