@@ -23,10 +23,14 @@ erl_crash.dump
 commerce_front-*.tar
 
 # Since we are building assets from assets/,
-# we ignore priv/static. You may want to comment
-# this depending on your deployment strategy.
-/priv/static/
+# we ignore most of priv/static (not the directory itself—git cannot
+# re-include paths under an excluded parent). Hand-maintained HTML views
+# under html/ are tracked; see PageController.
+/priv/static/*
+!/priv/static/html/
+!/priv/static/html/**
 
 /media
 
 .env_haho_prod
+.env.prod 
