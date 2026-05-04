@@ -1106,6 +1106,15 @@ defmodule CommerceFrontWeb.ApiController do
               %{status: "error", reason: "unknown"}
           end
 
+        "cancel_sales" ->
+          sales_id = params["id"] |> String.to_integer()
+          case Settings.cancel_sales(sales_id) do
+            {:ok, _} ->
+              %{status: "ok", message: "Sale #{sales_id} cancelled successfully"}
+            {:error, reason} ->
+              %{status: "error", reason: inspect(reason)}
+          end
+
         "manual_approve_admin" ->
           with sales <- Settings.get_sale!(params["id"]),
                true <- sales != nil,
@@ -2209,5 +2218,19 @@ defmodule CommerceFrontWeb.ApiController do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(200, Jason.encode!(%{status: "already deleted"}))
+  end
+
+  def cancel_sales(conn, params) do
+    sales_id = params["id"] |> String.to_integer()
+    
+    result = 
+      case Settings.cancel_sales(sales_id) do
+        {:ok, _} ->
+          %{status: "ok", message: "Sale #{sales_id} cancelled successfully"}
+        {:error, reason} ->
+          %{status: "error", reason: inspect(reason)}
+      end
+
+    json(conn, result)
   end
 end

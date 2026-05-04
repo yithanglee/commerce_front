@@ -94,6 +94,9 @@ defmodule CommerceFrontWeb.Router do
     post("/:model", ApiController, :form_submission)
     options("/:model/:id", ApiController, :delete_data)
     delete("/:model/:id", ApiController, :delete_data)
+    
+    # Admin operations
+    post "/cancel_sales", ApiController, :cancel_sales
   end
 
   scope "/api", CommerceFrontWeb do

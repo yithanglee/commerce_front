@@ -60,14 +60,14 @@ defmodule CommerceFront.Calculation do
         :referal
       )
       |> Enum.reverse()
-      |> List.insert_at(0, unpaid_node)
-      |> List.insert_at(0, unpaid_node)
-      |> List.insert_at(0, unpaid_node)
-      |> List.insert_at(0, unpaid_node)
-      |> List.insert_at(0, unpaid_node)
-      |> List.insert_at(0, unpaid_node)
-      |> List.insert_at(0, unpaid_node)
-      |> List.insert_at(0, unpaid_node)
+      |> List.insert_at(0, unpaid_node())
+      |> List.insert_at(0, unpaid_node())
+      |> List.insert_at(0, unpaid_node())
+      |> List.insert_at(0, unpaid_node())
+      |> List.insert_at(0, unpaid_node())
+      |> List.insert_at(0, unpaid_node())
+      |> List.insert_at(0, unpaid_node())
+      |> List.insert_at(0, unpaid_node())
       |> Enum.reverse()
 
     matrix = [
@@ -76,6 +76,8 @@ defmodule CommerceFront.Calculation do
       %{rank: "银级套餐", max: 7},
       %{rank: "金级套餐", max: 8}
     ]
+
+    unpaid_node = unpaid_node()
 
     calc = fn upline, index ->
       upline_rank = matrix |> Enum.filter(&(&1.rank == upline.rank)) |> List.first()
@@ -240,10 +242,7 @@ defmodule CommerceFront.Calculation do
   end
 
   def stockist_register_bonus(stockist_user, username, pv, sale) do
-    # Use new logic (sale.subtotal) from 1st May 2026 onwards
-    # Before that, use old logic (pv/total_point_value)
-    cutoff_date = ~D[2026-05-01]
-    today = Date.utc_today()
+    
 
     {calc_base, remarks_pv} =
       {sale.subtotal, sale.subtotal}
@@ -1965,6 +1964,8 @@ defmodule CommerceFront.Calculation do
   """
   def drp_sales_level_bonus(sales_id, drp_amount, child_user, date) do
     {y, m, d} = date |> Date.to_erl()
+
+    unpaid_node = unpaid_node()
 
     uplines =
       CommerceFront.Settings.check_uplines(child_user.username, :referal)

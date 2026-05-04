@@ -1,0 +1,886 @@
+warning: use Mix.Config is deprecated. Use the Config module instead
+  config/config.exs:8
+
+warning: Mix.Config.config/2 is deprecated. Use the Config module instead
+  config/config.exs:10
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/config.exs:14
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/config.exs:21
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/config.exs:31
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/config.exs:36
+
+warning: Mix.Config.config/2 is deprecated. Use the Config module instead
+  config/config.exs:38
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/config.exs:63
+
+warning: Mix.Config.import_config/1 is deprecated. Use the Config module instead
+  config/config.exs:76
+
+warning: use Mix.Config is deprecated. Use the Config module instead
+  config/dev.exs:1
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:9
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:22
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:63
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:74
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:78
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:81
+
+warning: Mix.Config.config/2 is deprecated. Use the Config module instead
+  config/dev.exs:83
+
+warning: Mix.Config.config/2 is deprecated. Use the Config module instead
+  config/dev.exs:84
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:86
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:91
+
+warning: Mix.Config.config/3 is deprecated. Use the Config module instead
+  config/dev.exs:96
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/billplz.ex:72
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/billplz.ex:126
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/billplz.ex:218
+
+warning: variable "bank_code" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/billplz.ex:195
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/billplz.ex:279
+
+warning: variable "opts" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/authorization.ex:10
+
+warning: variable "opts" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/authorization.ex:54
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front.ex:69
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front.ex:101
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front.ex:109
+
+warning: variable "end_of_month" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front.ex:110
+
+warning: variable "dynamic_code" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front.ex:248
+
+warning: variable "dynamic_code" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front.ex:395
+
+warning: variable "plural" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front.ex:384
+
+warning: variable "data" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/queue.ex:32
+
+warning: invalid association `merchant_sales_items` in schema CommerceFront.Settings.MerchantSale: associated schema CommerceFront.Settings.MerchantSaleItem does not have field `merchant_sale_id`
+  lib/commerce_front/settings/merchant_sale.ex:1
+
+warning: invalid association `user` in schema CommerceFront.Settings.Payment: associated schema CommerceFront.Settings.User does not have field `payment_id`
+  lib/commerce_front/settings/payment.ex:1
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:44
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:128
+
+warning: variable "server_url" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:143
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:201
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf_preview/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:128)
+  lib/commerce_front_web/controllers/page_controller.ex:201
+
+warning: variable "server_url" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:219
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:140)
+  lib/commerce_front_web/controllers/page_controller.ex:214
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:277
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf_preview/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:128)
+  lib/commerce_front_web/controllers/page_controller.ex:277
+
+warning: variable "server_url" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:293
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:140)
+  lib/commerce_front_web/controllers/page_controller.ex:290
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:350
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf_preview/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:128)
+  lib/commerce_front_web/controllers/page_controller.ex:350
+
+warning: variable "server_url" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:369
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:140)
+  lib/commerce_front_web/controllers/page_controller.ex:364
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:427
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf_preview/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:128)
+  lib/commerce_front_web/controllers/page_controller.ex:427
+
+warning: variable "server_url" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/page_controller.ex:448
+
+warning: clauses with the same name and arity (number of arguments) should be grouped together, "def pdf/2" was previously defined (lib/commerce_front_web/controllers/page_controller.ex:140)
+  lib/commerce_front_web/controllers/page_controller.ex:443
+
+warning: this clause cannot match because a previous clause at line 88 always matches
+  lib/commerce_front_web/router.ex:92
+
+warning: this clause cannot match because a previous clause at line 123 always matches
+  lib/commerce_front_web/router.ex:127
+
+warning: this clause cannot match because a previous clause at line 150 always matches
+  lib/commerce_front_web/router.ex:163
+
+warning: module attribute @content_security_policy was set but never used
+  lib/commerce_front_web/router.ex:9
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:29
+
+warning: variable "res2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:215
+
+warning: variable "amt" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:195
+
+warning: variable "pv" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:244
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:315
+
+warning: variable "index" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:414
+
+warning: variable "unpaid_node" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:449
+
+warning: variable "remaining_after_base" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:549
+
+warning: variable "remove_index" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:640
+
+warning: variable "referral" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:474
+
+warning: variable "r" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:736
+
+warning: variable "referral" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:671
+
+warning: variable "latest_gs" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:785
+
+warning: variable "placement" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:771
+
+warning: variable "username" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:771
+
+warning: variable "latest_gs" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:989
+
+warning: the underscored variable "_date" is used after being set. A leading underscore indicates that the value of the variable should be ignored. If this is intended please rename the variable to remove the underscore
+  lib/commerce_front/calculation.ex:1226
+
+warning: the underscored variable "_name" is used after being set. A leading underscore indicates that the value of the variable should be ignored. If this is intended please rename the variable to remove the underscore
+  lib/commerce_front/calculation.ex:1235
+
+warning: variable "today_sales_amount" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1223
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1304
+
+warning: variable "res" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/calculation.ex:1333
+
+warning: variable "star" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1542
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1468
+
+warning: variable "res" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/calculation.ex:1505
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1653
+
+warning: variable "index" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1891
+
+warning: variable "user_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1859
+
+warning: variable "user_product_wallet" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1859
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/calculation.ex:1806
+
+warning: variable "form" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/razer.ex:79
+
+warning: variable "single_map" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/razer.ex:104
+
+warning: variable "form" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/razer.ex:846
+
+warning: variable reason in code block has no effect as it is never returned (remove the variable or assign it to _ to avoid warnings)
+  lib/razer.ex:961
+
+warning: function callback_url/0 is unused
+  lib/razer.ex:10
+
+warning: function redirect_url/0 is unused
+  lib/razer.ex:11
+
+warning: variable "x" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:31
+
+warning: variable "final" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:7
+
+warning: variable "params" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:55
+
+warning: variable "translation_map" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:314
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:368
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:498
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:691
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:796
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:819
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:973
+
+warning: variable "multi_res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1003
+
+warning: variable "errors" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1007
+
+warning: variable "message_list" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1010
+
+warning: variable "succeeded" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1006
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:989
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1049
+
+warning: variable "multi_res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1099
+
+warning: variable "passed_cg" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1202
+
+warning: variable "passed_cg" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1221
+
+warning: variable "passed_cg" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1255
+
+warning: variable "passed_cg" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1271
+
+warning: variable "passed_cg" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1301
+
+warning: variable "user" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1359
+
+warning: variable "host" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1415
+
+warning: variable "errors" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1650
+
+warning: variable "message_list" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1653
+
+warning: variable "json" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1519
+
+warning: variable "params" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front_web/controllers/api_controller.ex:1668
+
+warning: variable "sq2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1723
+
+warning: variable "struct" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1782
+
+warning: variable "value" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1771
+
+warning: variable "i" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front_web/controllers/api_controller.ex:2012
+
+warning: variable "value" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:2012
+
+warning: variable "i" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front_web/controllers/api_controller.ex:1868
+
+warning: variable "value" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1868
+
+warning: variable "i" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front_web/controllers/api_controller.ex:1866
+
+warning: variable "value" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1866
+
+warning: variable "index" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1807
+
+warning: variable "preloads" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front_web/controllers/api_controller.ex:2111
+
+warning: variable "search_queries" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:1686
+
+warning: variable "json" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:2183
+
+warning: variable "result" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front_web/controllers/api_controller.ex:2216
+
+warning: Code.ensure_compiled?/1 is deprecated. Use Code.ensure_compiled/1 instead (see the proper disclaimers in its docs)
+  lib/commerce_front_web/controllers/api_controller.ex:1533
+
+warning: CommerceFront.Settings.decode_corporate_account_token/1 is undefined or private
+  lib/commerce_front_web/controllers/api_controller.ex:1471
+
+warning: variable "update_wallet_balance2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:9005
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:316
+
+warning: variable "params" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:498
+
+warning: variable "params" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:540
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:604
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:655
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:797
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:1477
+
+warning: variable "sample2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:1478
+
+warning: variable "u" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2218
+
+warning: variable "fullname" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2769
+
+warning: variable "id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2769
+
+warning: variable "rank_name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2769
+
+warning: variable "sum_left" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2769
+
+warning: variable "sum_right" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2769
+
+warning: variable "balance_left" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2746
+
+warning: variable "balance_right" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2747
+
+warning: variable "fullname" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2740
+
+warning: variable "id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2739
+
+warning: variable "left" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2742
+
+warning: variable "new_left" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2748
+
+warning: variable "new_right" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2749
+
+warning: variable "position" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2741
+
+warning: variable "right" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2743
+
+warning: variable "sum_left" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2750
+
+warning: variable "sum_right" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2751
+
+warning: variable "total_left" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2744
+
+warning: variable "total_right" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2745
+
+warning: variable "transformed_children" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:2560
+
+warning: variable "multi" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3007
+
+warning: variable "back_date" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3115
+
+warning: variable "placement" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3167
+
+warning: variable "from_user" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3237
+
+warning: variable "end_datetime" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3359
+
+warning: variable "sales" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3362
+
+warning: variable "sales" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3381
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3394
+
+warning: variable "sales" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3402
+
+warning: variable "pgsd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3479
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3415
+
+warning: variable "m" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3415
+
+warning: variable "m" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:3419
+
+warning: variable "y" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3415
+
+warning: variable "y" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:3419
+
+warning: variable "r4" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3540
+
+warning: variable "r5" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3548
+
+warning: variable "pgsd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3726
+
+warning: variable "pgsd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3705
+
+warning: variable "pgsd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3814
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:3850
+
+warning: variable "pres" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:4458
+
+warning: variable "sample" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:4430
+
+warning: variable "ers" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5111
+
+warning: variable "form_drp" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:5098
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:4101
+
+warning: variable "shipping_fee" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:4265
+
+warning: variable "upgrade_target_user" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5389
+
+warning: variable "sales_person" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5387
+
+warning: variable "placement" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5661
+
+warning: variable "user" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5659
+
+warning: variable "pgsd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5683
+
+warning: variable "ra" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5753
+
+warning: variable "pgsd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5701
+
+warning: variable "referral" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5704
+
+warning: variable "sales_person" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5700
+
+warning: variable "pgsd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5775
+
+warning: variable "placement" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5779
+
+warning: variable "sales_person" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5778
+
+warning: variable "stockist_user" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5781
+
+warning: variable "user" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5776
+
+warning: variable "placement" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5944
+
+warning: variable "sales_person" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5945
+
+warning: variable "placement" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5981
+
+warning: variable "sales_person" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5982
+
+warning: variable "user" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5979
+
+warning: variable "multi" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5369
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:5363
+
+warning: variable "direction" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6155
+
+warning: variable "seek_direction" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6159
+
+warning: variable "tl2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6326
+
+warning: variable "check_this_month_reward" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6352
+
+warning: variable "wt" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6626
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6568
+
+warning: variable "is_prev" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6675
+
+warning: variable "query2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6681
+
+warning: variable "user_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6675
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6756
+
+warning: variable "u2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6857
+
+warning: variable "u3" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6857
+
+warning: variable "unit_2" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6823
+
+warning: variable "unit_3" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:6839
+
+warning: variable "end_naive_date" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7471
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7531
+
+warning: variable "end_naive_date" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7540
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7600
+
+warning: variable "end_naive_date" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7609
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7669
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7705
+
+warning: variable "sdate" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7724
+
+warning: variable "sdate" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7794
+
+warning: variable "sdate" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7858
+
+warning: variable "sdate" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:7914
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8077
+
+warning: variable "back_date" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8097
+
+warning: variable "d" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8120
+
+warning: variable "rewards" is unused (there is a variable with the same name in the context, use the pin operator (^) to match on it or prefix this variable with underscore if it is not meant to be used)
+  lib/commerce_front/settings.ex:8307
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8506
+
+warning: variable "server_url" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8652
+
+warning: variable "server_url" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8669
+
+warning: variable "mi" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8840
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8896
+
+warning: variable "adjustments" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8986
+
+warning: variable "hd" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8984
+
+warning: variable "check" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8975
+
+warning: variable "count" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:8975
+
+warning: variable "sample" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:9032
+
+warning: variable "end_date" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:9115
+
+warning: variable "res" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:9138
+
+warning: variable "users_weak_leg" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:9141
+
+warning: variable "freebie" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/settings.ex:9167
+
+warning: unused import CommerceFront.Calculation.biz_incentive_bonus/4
+  lib/commerce_front/settings.ex:12
+
+warning: unused import CommerceFront.Calculation.matching_biz_incentive_bonus/2
+  lib/commerce_front/settings.ex:12
+
+warning: unused import CommerceFront.Calculation.special_share_reward/3
+  lib/commerce_front/settings.ex:12
+
+warning: unused import CommerceFront.Calculation.team_bonus/5
+  lib/commerce_front/settings.ex:12
+
+warning: variable "env" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/admin.ex:23
+
+warning: variable "repo" is unused (if the variable is not meant to be used, prefix it with an underscore)
+  lib/commerce_front/utility.ex:357
+
+warning: this clause for apply_dynamic_order/2 cannot match because a previous clause at line 181 always matches
+  lib/commerce_front/utility.ex:199
+
+warning: this clause for apply_dynamic_joins/2 cannot match because a previous clause at line 201 always matches
+  lib/commerce_front/utility.ex:222
+
+warning: unused alias Repo
+  lib/commerce_front/utility.ex:3
+
+warning: Code.ensure_compiled?/1 is deprecated. Use Code.ensure_compiled/1 instead (see the proper disclaimers in its docs)
+  lib/commerce_front/utility.ex:56
+
+[info] [Porcelain]: goon executable not found
+[info] [Porcelain]: falling back to the basic driver.
+[info] [Porcelain]: (set `config :porcelain, driver: Porcelain.Driver.Basic` or `config :porcelain, goon_warn_if_missing: false` to disable this warning)
+[error] `inotify-tools` is needed to run `file_system` for your system, check https://github.com/rvoicilas/inotify-tools/wiki for more information about how to install it. If it's already installed but not be found, appoint executable file with `config.exs` or `FILESYSTEM_FSINOTIFY_EXECUTABLE_FILE` env.
+[warning] Could not start Phoenix live-reload because we cannot listen to the file system.
+You don't need to worry! This is an optional feature used during development to
+refresh your browser when you save files and it does not affect production.
+
+[info] [swarm on nonode@nohost] [tracker:init] started
+[error] Failed to start Ranch listener CommerceFrontWeb.Endpoint.HTTP in :ranch_tcp:listen([cacerts: :..., key: :..., cert: :..., port: 4700]) for reason :eaddrinuse (address already in use)
+
+[notice] Application commerce_front exited: CommerceFront.Application.start(:normal, []) returned an error: shutdown: failed to start child: CommerceFrontWeb.Endpoint
+    ** (EXIT) shutdown: failed to start child: {:ranch_listener_sup, CommerceFrontWeb.Endpoint.HTTP}
+        ** (EXIT) shutdown: failed to start child: :ranch_acceptors_sup
+            ** (EXIT) {:listen_error, CommerceFrontWeb.Endpoint.HTTP, :eaddrinuse}
+[notice] Application quantum exited: :stopped
+[notice] Application swarm exited: :stopped
+[notice] Application gen_state_machine exited: :stopped
+[notice] Application libring exited: :stopped
+[notice] Application crontab exited: :stopped
+[notice] Application timex exited: :stopped
+[notice] Application gettext exited: :stopped
+[notice] Application expo exited: :stopped
+[notice] Application combine exited: :stopped
+[notice] Application tzdata exited: :stopped
+[notice] Application web_push_encryption exited: :stopped
+[notice] Application jose exited: :stopped
+[notice] Application httpoison exited: :stopped
+[notice] Application mogrify exited: :stopped
+[notice] Application poison exited: :stopped
+[notice] Application telemetry_poller exited: :stopped
+[notice] Application telemetry_metrics exited: :stopped
+[notice] Application phoenix_live_reload exited: :stopped
+[notice] Application file_system exited: :stopped
+[notice] Application pdf_generator exited: :stopped
+[notice] Application ecto_enum exited: :stopped
+[notice] Application ecto_sql exited: :stopped
+[notice] Application postgrex exited: :stopped
+[notice] Application connection exited: :stopped
+[notice] Application db_connection exited: :stopped
+[notice] Application phoenix_ecto exited: :stopped
+[notice] Application ecto exited: :stopped
+[notice] Application distillery exited: :stopped
+[notice] Application artificery exited: :stopped
+[notice] Application cors_plug exited: :stopped
+[notice] Application blue_potion exited: :stopped
+[notice] Application porcelain exited: :stopped
+[notice] Application sshex exited: :stopped
+[notice] Application ssh exited: :stopped
+[notice] Application broadway_sqs exited: :stopped
+[notice] Application ex_aws_sqs exited: :stopped
+[notice] Application ex_aws exited: :stopped
+[notice] Application sweet_xml exited: :stopped
+[notice] Application xmerl exited: :stopped
+[notice] Application saxy exited: :stopped
+[notice] Application broadway exited: :stopped
+[notice] Application nimble_options exited: :stopped
+[notice] Application gen_stage exited: :stopped
+[notice] Application bamboo_smtp exited: :stopped
+[notice] Application gen_smtp exited: :stopped
+[notice] Application bamboo_phoenix exited: :stopped
+[notice] Application bamboo exited: :stopped
+[notice] Application hackney exited: :stopped
+[notice] Application metrics exited: :stopped
+[notice] Application ssl_verify_fun exited: :stopped
+[notice] Application parse_trans exited: :stopped
+[notice] Application syntax_tools exited: :stopped
+[notice] Application certifi exited: :stopped
+[notice] Application mimerl exited: :stopped
+[notice] Application idna exited: :stopped
+[notice] Application unicode_util_compat exited: :stopped
+[notice] Application runtime_tools exited: :stopped
+** (Mix) Could not start application commerce_front: CommerceFront.Application.start(:normal, []) returned an error: shutdown: failed to start child: CommerceFrontWeb.Endpoint
+    ** (EXIT) shutdown: failed to start child: {:ranch_listener_sup, CommerceFrontWeb.Endpoint.HTTP}
+        ** (EXIT) shutdown: failed to start child: :ranch_acceptors_sup
+            ** (EXIT) {:listen_error, CommerceFrontWeb.Endpoint.HTTP, :eaddrinuse}
