@@ -596,21 +596,35 @@ defmodule CommerceFrontWeb.ApiController do
 
         "node" ->
           if params["token"] != nil do
-            if params["username"] == "damien" do
-              %{
-                icon: "fa fa-user text-success",
-                id: "root",
-                text: "root",
-                children: [
-                  %{id: "root1", text: "root1", children: true, icon: "fa fa-user"}
-                ],
-                type: "root"
-              }
-            else
-              []
-            end
+            case Settings.decode_token(params["token"]) do
+              %{id: user_id} when is_integer(user_id) and user_id > 0 ->
+                root_user = Settings.get_user!(user_id)
 
-            Settings.display_refer_tree(params["username"])
+                cond do
+                  root_user == nil ->
+                    []
+
+                  root_user.username != params["username"] ->
+                    []
+
+                  params["id"] in [nil, "", "#"] ->
+                    Settings.display_refer_tree(params["username"],
+                      lazy: true,
+                      max_depth: 5
+                    )
+
+                  true ->
+                    Settings.display_refer_tree_children_only(
+                      params["username"],
+                      params["id"],
+                      lazy: true,
+                      max_depth: 5
+                    )
+                end
+
+              _ ->
+                []
+            end
           else
             []
           end

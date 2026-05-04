@@ -2403,10 +2403,77 @@ defmodule CommerceFront.Settings do
     Repo.delete(model)
   end
 
-  def display_refer_tree(username) do
+  def display_refer_tree(username, opts \\ []) do
     list = check_downlines(username, :referral)
-    display_tree(username, list, [], :referral, false, 0)
+    lazy = Keyword.get(opts, :lazy, false)
+    max_depth = Keyword.get(opts, :max_depth, if(lazy, do: 5, else: 4))
+    display_tree(username, list, [], :referral, false, 0, false, max_depth, opts)
   end
+
+  @doc """
+  Returns jstree-ready child nodes for `parent_user_id` (referral downline of that user),
+  up to `max_depth` levels deep, with `children: true` where deeper data exists and lazy
+  mode is on. Caller must enforce that `parent_user_id` belongs to `root_username`'s tree.
+  """
+  def display_refer_tree_children_only(root_username, parent_user_id, opts \\ []) do
+    lazy = Keyword.get(opts, :lazy, true)
+    max_depth = Keyword.get(opts, :max_depth, 5)
+
+    parent_id =
+      cond do
+        is_integer(parent_user_id) ->
+          parent_user_id
+
+        is_binary(parent_user_id) ->
+          case Integer.parse(String.trim(parent_user_id)) do
+            {n, _} -> n
+            :error -> nil
+          end
+
+        true ->
+          nil
+      end
+
+    with true <- is_integer(parent_id),
+         %User{} = parent <- Repo.get(User, parent_id),
+         true <- referral_is_descendant_of_downline_tree?(root_username, parent.username) do
+      list = check_downlines(parent.username, :referral)
+
+      tree =
+        display_tree(
+          parent.username,
+          list,
+          [],
+          :referral,
+          false,
+          0,
+          false,
+          max_depth,
+          Keyword.merge(opts, lazy: lazy)
+        )
+
+      Map.get(tree, :children) || []
+    else
+      _ -> []
+    end
+  end
+
+  defp referral_is_descendant_of_downline_tree?(root_username, member_username) do
+    cond do
+      member_username == root_username ->
+        true
+
+      true ->
+        check_uplines(member_username, :referral)
+        |> Enum.any?(fn row -> row.parent == root_username end)
+    end
+  end
+
+  defp referral_has_downlines?(user_id) when is_integer(user_id) do
+    Repo.exists?(from(r in Referral, where: r.parent_user_id == ^user_id))
+  end
+
+  defp referral_has_downlines?(_), do: false
 
   def display_place_tree(username, full \\ false) do
     username =
@@ -2421,7 +2488,7 @@ defmodule CommerceFront.Settings do
 
     list = check_downlines(username)
 
-    tree = display_tree(username, list, [], :placement, false, 0, full, 8)
+    tree = display_tree(username, list, [], :placement, false, 0, full, 8, [])
 
     if tree != nil do
       [fl_child, far_left_data] = far_node("left", username, %{})
@@ -2452,7 +2519,7 @@ defmodule CommerceFront.Settings do
 
       tree =
         if tree == %{} do
-          display_tree(username, list, [], :placement, false, 0, true, 8)
+          display_tree(username, list, [], :placement, false, 0, true, 8, [])
         else
           tree
         end
@@ -2552,7 +2619,7 @@ defmodule CommerceFront.Settings do
   @doc """
 
   list = CommerceFront.Settings.check_downlines("elis", true)
-      tree = CommerceFront.Settings.display_tree("elis", list, [], :placement, false, 0, full, 8)
+      tree = CommerceFront.Settings.display_tree("elis", list, [], :placement, false, 0, full, 8, [])
   """
   def display_tree(
         username \\ "damien",
@@ -2562,8 +2629,10 @@ defmodule CommerceFront.Settings do
         include_empty \\ true,
         count,
         full \\ false,
-        max_depth \\ 4
+        max_depth \\ 4,
+        opts \\ []
       ) do
+    lazy = Keyword.get(opts, :lazy, false)
     Logger.info("[display tree] - Count: #{count} - #{username}")
 
     to_map = fn list ->
@@ -2762,7 +2831,8 @@ defmodule CommerceFront.Settings do
             include_empty,
             count + 1,
             full,
-            max_depth
+            max_depth,
+            opts
           )
         end
       else
@@ -2771,7 +2841,13 @@ defmodule CommerceFront.Settings do
         # map = ori_data |> Enum.filter(&(&1.parent_username == username)) |> List.first()
 
         if count + 1 >= max_depth do
-          to_map.(Enum.join(list, "|"))
+          leaf = to_map.(Enum.join(list, "|"))
+
+          if lazy && referral_has_downlines?(leaf.id) do
+            Map.put(leaf, :children, true)
+          else
+            leaf
+          end
         else
           display_tree(
             username,
@@ -2781,7 +2857,8 @@ defmodule CommerceFront.Settings do
             include_empty,
             count + 1,
             full,
-            max_depth
+            max_depth,
+            opts
           )
         end
       end
