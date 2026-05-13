@@ -2544,7 +2544,13 @@ defmodule CommerceFront.Settings do
         forced_direction \\ nil,
         list \\ nil
       ) do
-    username = if Map.has_key?(first_node, :username), do: first_node.username, else: first_node.user.username
+    username = 
+      cond do
+        Map.has_key?(first_node, :username) -> first_node.username
+        Map.has_key?(first_node, :name) -> first_node.name
+        Map.has_key?(first_node, :user) -> first_node.user.username
+        true -> nil
+      end
     list = list || check_downlines(username)
     lookup = Map.new(list, fn item -> {item.parent_username, item} end)
     find_weak_placement_flat(lookup, username, use_one_direction, first_node, prev_node, forced_direction)
@@ -2562,7 +2568,13 @@ defmodule CommerceFront.Settings do
          prev_node |> Map.put(:right, right + 1)
        end
     else
-      first_username = if Map.has_key?(first_node, :username), do: first_node.username, else: first_node.user.username
+      first_username = 
+        cond do
+          Map.has_key?(first_node, :username) -> first_node.username
+          Map.has_key?(first_node, :name) -> first_node.name
+          Map.has_key?(first_node, :user) -> first_node.user.username
+          true -> nil
+        end
       current_node_data = if current_username == first_username do
         first_node
       else
@@ -2977,6 +2989,7 @@ defmodule CommerceFront.Settings do
         inner_map = %{
           id: map.parent_id,
           name: map.parent_username,
+          username: map.parent_username,
           position: if(smap != nil, do: smap.position, else: "n/a"),
           left: if(smap != nil, do: smap.left, else: "n/a"),
           right: if(smap != nil, do: smap.right, else: "n/a"),
