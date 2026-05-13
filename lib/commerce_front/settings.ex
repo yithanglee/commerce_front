@@ -2488,25 +2488,26 @@ defmodule CommerceFront.Settings do
 
     list = check_downlines(username)
 
-    tree = display_tree(username, list, [], :placement, false, 0, full, 8, [])
+    tree = display_tree(username, list, [], :placement, false, 0, full, 20, [])
 
-    if tree != nil do
-      [fl_child, far_left_data] = far_node("left", username, %{}, nil, list)
+    res =
+      if tree != nil do
+        [fl_child, far_left_data] = far_node("left", username, %{}, nil, list)
 
-      [fr_child, far_right_data] = far_node("right", username, %{}, nil, list)
+        [fr_child, far_right_data] = far_node("right", username, %{}, nil, list)
 
-      map = %{
-        far_left: far_left_data,
-        far_left_child: fl_child,
-        far_right: far_right_data,
-        far_right_child: fr_child
-      }
+        map = %{
+          far_left: far_left_data,
+          far_left_child: fl_child,
+          far_right: far_right_data,
+          far_right_child: fr_child
+        }
 
-      tree
-      |> Map.merge(map)
-    end
+        tree
+        |> Map.merge(map)
+      end
 
-    # tree
+    res
   end
 
   def far_node(position, username, _tree \\ %{}, parent_username \\ nil, list \\ nil) do
@@ -2544,58 +2545,98 @@ defmodule CommerceFront.Settings do
         forced_direction \\ nil,
         list \\ nil
       ) do
-    username = 
+    username =
       cond do
         Map.has_key?(first_node, :username) -> first_node.username
         Map.has_key?(first_node, :name) -> first_node.name
         Map.has_key?(first_node, :user) -> first_node.user.username
         true -> nil
       end
+
     list = list || check_downlines(username)
     lookup = Map.new(list, fn item -> {item.parent_username, item} end)
-    find_weak_placement_flat(lookup, username, use_one_direction, first_node, prev_node, forced_direction)
+
+    res =
+      find_weak_placement_flat(
+        lookup,
+        username,
+        use_one_direction,
+        first_node,
+        prev_node,
+        forced_direction
+      )
+
+    res
   end
 
-  defp find_weak_placement_flat(lookup, current_username, use_one_direction, first_node, prev_node, forced_direction) do
-    node_entry = Map.get(lookup, current_username)
-    
+  defp find_weak_placement_flat(
+         lookup,
+         current_username,
+         use_one_direction,
+         first_node,
+         prev_node,
+         forced_direction
+       ) do
+    node_entry = Map.get(lookup, current_username) |> IO.inspect(label: "node entry")
+
     if node_entry == nil do
-       if first_node.left > first_node.right do
-         left = prev_node.left
-         prev_node |> Map.put(:left, left + 1)
-       else
-         right = prev_node.right
-         prev_node |> Map.put(:right, right + 1)
-       end
+      # if prev_node still have 1 more on left right, need cycledown?
+
+
+      if first_node.left > first_node.right do
+        left = prev_node.left
+        prev_node |> Map.put(:left, left + 1)
+      else
+        right = prev_node.right
+        prev_node |> Map.put(:right, right + 1)
+      end
     else
-      first_username = 
+      first_username =
         cond do
           Map.has_key?(first_node, :username) -> first_node.username
           Map.has_key?(first_node, :name) -> first_node.name
           Map.has_key?(first_node, :user) -> first_node.user.username
           true -> nil
         end
-      current_node_data = if current_username == first_username do
-        first_node
-      else
-        parent_entry = Enum.find(Map.values(lookup), fn item -> 
-          Enum.any?(item.children, fn c -> String.starts_with?(c, current_username <> "|") end)
-        end)
-        
-        if parent_entry do
-           child_str = Enum.find(parent_entry.children, fn c -> String.starts_with?(c, current_username <> "|") end)
-           parse_placement_string(child_str)
+
+      current_node_data =
+        if current_username == first_username do
+          first_node
         else
-           first_node
+          parent_entry =
+            Enum.find(Map.values(lookup), fn item ->
+              Enum.any?(item.children, fn c -> String.starts_with?(c, current_username <> "|") end)
+            end)
+
+          if parent_entry do
+            child_str =
+              Enum.find(parent_entry.children, fn c ->
+                String.starts_with?(c, current_username <> "|")
+              end)
+
+            parse_placement_string(child_str)
+          else
+            first_node
+          end
         end
-      end
 
       children_data = Enum.map(node_entry.children, &parse_placement_string/1)
-      
+
       if use_one_direction do
         if forced_direction != nil do
           node = Enum.find(children_data, &(&1.position == forced_direction))
-          find_weak_placement_flat(lookup, node && node.username, use_one_direction, first_node, current_node_data, forced_direction)
+
+          res =
+            find_weak_placement_flat(
+              lookup,
+              node && node.username,
+              use_one_direction,
+              first_node,
+              current_node_data,
+              forced_direction
+            )
+
+          res
         else
           node =
             if first_node.left > first_node.right do
@@ -2604,16 +2645,37 @@ defmodule CommerceFront.Settings do
               Enum.find(children_data, &(&1.position == "left"))
             end
 
-          find_weak_placement_flat(lookup, node && node.username, use_one_direction, first_node, current_node_data, nil)
+          find_weak_placement_flat(
+            lookup,
+            node && node.username,
+            use_one_direction,
+            first_node,
+            current_node_data,
+            nil
+          )
         end
       else
         left_node = Enum.find(children_data, &(&1.position == "left"))
         right_node = Enum.find(children_data, &(&1.position == "right"))
 
         if current_node_data.left > current_node_data.right do
-          find_weak_placement_flat(lookup, right_node && right_node.username, use_one_direction, first_node, current_node_data, nil)
+          find_weak_placement_flat(
+            lookup,
+            right_node && right_node.username,
+            use_one_direction,
+            first_node,
+            current_node_data,
+            nil
+          )
         else
-          find_weak_placement_flat(lookup, left_node && left_node.username, use_one_direction, first_node, current_node_data, nil)
+          find_weak_placement_flat(
+            lookup,
+            left_node && left_node.username,
+            use_one_direction,
+            first_node,
+            current_node_data,
+            nil
+          )
         end
       end
     end
@@ -3244,12 +3306,9 @@ defmodule CommerceFront.Settings do
   @doc """
   CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
 
-  sales = CommerceFront.Settings.get_sale!(627)
-  placement = CommerceFront.Settings.get_placement_by_username("yokechu")
-
-  CommerceFront.Settings.contribute_group_sales("chingyee", 100, sales, placement)
-
-  CommerceFront.Settings.contribute_group_sales("yokechu", -700, sales, placement)
+  sales = CommerceFront.Settings.get_sale!(923)
+  placement = CommerceFront.Settings.get_placement_by_username("CTK1")
+  CommerceFront.Settings.contribute_group_sales("CTK1", -700, sales, placement)
 
 
 
@@ -3424,6 +3483,8 @@ defmodule CommerceFront.Settings do
         if tree != nil do
           card =
             CommerceFront.Settings.find_weak_placement(tree, true, tree, nil, forced_direction)
+
+
 
           position =
             cond do
