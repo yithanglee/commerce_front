@@ -2491,9 +2491,9 @@ defmodule CommerceFront.Settings do
     tree = display_tree(username, list, [], :placement, false, 0, full, 8, [])
 
     if tree != nil do
-      [fl_child, far_left_data] = far_node("left", username, %{})
+      [fl_child, far_left_data] = far_node("left", username, %{}, nil, list)
 
-      [fr_child, far_right_data] = far_node("right", username, %{})
+      [fr_child, far_right_data] = far_node("right", username, %{}, nil, list)
 
       map = %{
         far_left: far_left_data,
@@ -2509,56 +2509,30 @@ defmodule CommerceFront.Settings do
     # tree
   end
 
-  def far_node(position, username, tree \\ %{}, parent_username \\ nil) do
-    IO.inspect("far #{username}")
+  def far_node(position, username, _tree \\ %{}, parent_username \\ nil, list \\ nil) do
+    list = list || check_downlines(username)
+    lookup = Map.new(list, fn item -> {item.parent_username, item} end)
+    do_far_node(position, username, lookup, parent_username)
+  end
 
-    if username |> String.contains?("~") do
-      [parent_username, parent_username]
-    else
-      list = check_downlines(username)
+  defp do_far_node(position, username, lookup, parent_username) do
+    node_entry = Map.get(lookup, username)
 
-      tree =
-        if tree == %{} do
-          display_tree(username, list, [], :placement, false, 0, true, 8, [])
-        else
-          tree
-        end
+    if node_entry do
+      child_str =
+        Enum.find(node_entry.children || [], fn c ->
+          parts = String.split(c, "|")
+          Enum.at(parts, 3) == position
+        end)
 
-      children = tree |> Map.get(:children)
-
-      if :position in (Enum.map(children, &Map.keys(&1)) |> List.flatten() |> Enum.uniq()) do
-        new_tree = children |> Enum.filter(&(&1.position == position)) |> List.first()
-
-        if new_tree != nil do
-          parent_username =
-            if List.first(list) == nil do
-              "~空"
-            else
-              List.first(list) |> Map.get(:parent_username)
-            end
-
-          far_node(
-            position,
-            new_tree |> Map.get(:name),
-            new_tree,
-            parent_username
-          )
-        else
-          parent_username =
-            if List.first(list) == nil do
-              "~空"
-            else
-              List.first(list) |> Map.get(:parent_username)
-            end
-
-          [
-            parent_username,
-            parent_username
-          ]
-        end
+      if child_str do
+        child_username = child_str |> String.split("|") |> List.first()
+        do_far_node(position, child_username, lookup, username)
       else
-        [username, parent_username]
+        [username, username]
       end
+    else
+      [username, parent_username]
     end
   end
 
@@ -2567,53 +2541,106 @@ defmodule CommerceFront.Settings do
         use_one_direction,
         first_node,
         prev_node \\ nil,
-        forced_direction \\ nil
+        forced_direction \\ nil,
+        list \\ nil
       ) do
-    IO.inspect("from tree")
-    IO.inspect(tree)
+    username = if Map.has_key?(first_node, :username), do: first_node.username, else: first_node.user.username
+    list = list || check_downlines(username)
+    lookup = Map.new(list, fn item -> {item.parent_username, item} end)
+    find_weak_placement_flat(lookup, username, use_one_direction, first_node, prev_node, forced_direction)
+  end
 
-    if tree == nil do
-      if first_node.left > first_node.right do
-        # need to add to left + 1
-
-        left = prev_node.left
-
-        prev_node |> Map.put(:left, left + 1)
-      else
-        right = prev_node.right
-
-        prev_node |> Map.put(:right, right + 1)
-      end
+  defp find_weak_placement_flat(lookup, current_username, use_one_direction, first_node, prev_node, forced_direction) do
+    node_entry = Map.get(lookup, current_username)
+    
+    if node_entry == nil do
+       if first_node.left > first_node.right do
+         left = prev_node.left
+         prev_node |> Map.put(:left, left + 1)
+       else
+         right = prev_node.right
+         prev_node |> Map.put(:right, right + 1)
+       end
     else
-      items = tree |> Map.get(:children) |> Enum.reject(&(&1.id == 0))
+      first_username = if Map.has_key?(first_node, :username), do: first_node.username, else: first_node.user.username
+      current_node_data = if current_username == first_username do
+        first_node
+      else
+        parent_entry = Enum.find(Map.values(lookup), fn item -> 
+          Enum.any?(item.children, fn c -> String.starts_with?(c, current_username <> "|") end)
+        end)
+        
+        if parent_entry do
+           child_str = Enum.find(parent_entry.children, fn c -> String.starts_with?(c, current_username <> "|") end)
+           parse_placement_string(child_str)
+        else
+           first_node
+        end
+      end
 
+      children_data = Enum.map(node_entry.children, &parse_placement_string/1)
+      
       if use_one_direction do
         if forced_direction != nil do
-          node = items |> Enum.filter(&(&1.position == forced_direction)) |> List.first()
-
-          find_weak_placement(node, use_one_direction, first_node, tree, forced_direction)
+          node = Enum.find(children_data, &(&1.position == forced_direction))
+          find_weak_placement_flat(lookup, node && node.username, use_one_direction, first_node, current_node_data, forced_direction)
         else
           node =
             if first_node.left > first_node.right do
-              items |> Enum.filter(&(&1.position == "right")) |> List.first()
+              Enum.find(children_data, &(&1.position == "right"))
             else
-              items |> Enum.filter(&(&1.position == "left")) |> List.first()
+              Enum.find(children_data, &(&1.position == "left"))
             end
 
-          find_weak_placement(node, use_one_direction, first_node, tree)
+          find_weak_placement_flat(lookup, node && node.username, use_one_direction, first_node, current_node_data, nil)
         end
       else
-        left = items |> Enum.filter(&(&1.position == "left")) |> List.first()
+        left_node = Enum.find(children_data, &(&1.position == "left"))
+        right_node = Enum.find(children_data, &(&1.position == "right"))
 
-        right = items |> Enum.filter(&(&1.position == "right")) |> List.first()
-
-        if tree.left > tree.right do
-          find_weak_placement(right, use_one_direction, first_node, tree)
+        if current_node_data.left > current_node_data.right do
+          find_weak_placement_flat(lookup, right_node && right_node.username, use_one_direction, first_node, current_node_data, nil)
         else
-          find_weak_placement(left, use_one_direction, first_node, tree)
+          find_weak_placement_flat(lookup, left_node && left_node.username, use_one_direction, first_node, current_node_data, nil)
         end
       end
     end
+  end
+
+  defp parse_placement_string(str) do
+    [
+      username,
+      id,
+      rank_name,
+      position,
+      left,
+      right,
+      total_left,
+      total_right,
+      balance_left,
+      balance_right,
+      new_left,
+      new_right,
+      sum_left,
+      sum_right
+    ] = String.split(str, "|")
+
+    %{
+      username: username,
+      id: String.to_integer(id),
+      rank_name: rank_name,
+      position: position,
+      left: String.to_integer(left),
+      right: String.to_integer(right),
+      total_left: total_left,
+      total_right: total_right,
+      balance_left: balance_left,
+      balance_right: balance_right,
+      new_left: new_left,
+      new_right: new_right,
+      sum_left: sum_left,
+      sum_right: sum_right
+    }
   end
 
   @doc """
