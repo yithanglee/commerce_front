@@ -2579,9 +2579,8 @@ defmodule CommerceFront.Settings do
        ) do
     node_entry = Map.get(lookup, current_username) |> IO.inspect(label: "node entry")
 
-    if node_entry == nil do
+    if current_username == nil do
       # if prev_node still have 1 more on left right, need cycledown?
-
 
       if first_node.left > first_node.right do
         left = prev_node.left
@@ -2620,62 +2619,66 @@ defmodule CommerceFront.Settings do
           end
         end
 
-      children_data = Enum.map(node_entry.children, &parse_placement_string/1)
+      if node_entry == nil do
+        current_node_data
+      else
+        children_data = Enum.map(node_entry.children, &parse_placement_string/1)
 
-      if use_one_direction do
-        if forced_direction != nil do
-          node = Enum.find(children_data, &(&1.position == forced_direction))
+        if use_one_direction do
+          if forced_direction != nil do
+            node = Enum.find(children_data, &(&1.position == forced_direction))
 
-          res =
+            res =
+              find_weak_placement_flat(
+                lookup,
+                node && node.username,
+                use_one_direction,
+                first_node,
+                current_node_data,
+                forced_direction
+              )
+
+            res
+          else
+            node =
+              if first_node.left > first_node.right do
+                Enum.find(children_data, &(&1.position == "right"))
+              else
+                Enum.find(children_data, &(&1.position == "left"))
+              end
+
             find_weak_placement_flat(
               lookup,
               node && node.username,
               use_one_direction,
               first_node,
               current_node_data,
-              forced_direction
+              nil
             )
-
-          res
+          end
         else
-          node =
-            if first_node.left > first_node.right do
-              Enum.find(children_data, &(&1.position == "right"))
-            else
-              Enum.find(children_data, &(&1.position == "left"))
-            end
+          left_node = Enum.find(children_data, &(&1.position == "left"))
+          right_node = Enum.find(children_data, &(&1.position == "right"))
 
-          find_weak_placement_flat(
-            lookup,
-            node && node.username,
-            use_one_direction,
-            first_node,
-            current_node_data,
-            nil
-          )
-        end
-      else
-        left_node = Enum.find(children_data, &(&1.position == "left"))
-        right_node = Enum.find(children_data, &(&1.position == "right"))
-
-        if current_node_data.left > current_node_data.right do
-          find_weak_placement_flat(
-            lookup,
-            right_node && right_node.username,
-            use_one_direction,
-            first_node,
-            current_node_data,
-            nil
-          )
-        else
-          find_weak_placement_flat(
-            lookup,
-            left_node && left_node.username,
-            use_one_direction,
-            first_node,
-            current_node_data,
-            nil
-          )
+          if current_node_data.left > current_node_data.right do
+            find_weak_placement_flat(
+              lookup,
+              right_node && right_node.username,
+              use_one_direction,
+              first_node,
+              current_node_data,
+              nil
+            )
+          else
+            find_weak_placement_flat(
+              lookup,
+              left_node && left_node.username,
+              use_one_direction,
+              first_node,
+              current_node_data,
+              nil
+            )
+          end
         end
       end
     end
