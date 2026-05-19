@@ -5054,10 +5054,9 @@ defmodule CommerceFront.Settings do
                   end
 
                 # 2026/3/3 ; drp usage cant more than 80% of total subtotal
-
                 with true <- :erlang.trunc(drp.total) >= form_drp,
                      true <- (rp.total >= sale.grand_total - form_drp) |> IO.inspect(),
-                     true <- form_drp <= (subtotal * 0.8) |> IO.inspect(label: "drp_usage"),
+                     true <- form_drp <= Float.round((sale.grand_total * 1.1 * 0.8),2)  |> IO.inspect(label: "drp_usage"),
                      fin_amt <- sale.total_point_value - form_drp do
                   fin_amt =
                     if fin_amt < 0 do
