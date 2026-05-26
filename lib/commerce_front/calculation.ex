@@ -242,7 +242,7 @@ defmodule CommerceFront.Calculation do
   end
 
   def stockist_register_bonus(stockist_user, username, pv, sale) do
-    
+
 
     {calc_base, remarks_pv} =
       {sale.subtotal, sale.subtotal}
@@ -397,8 +397,8 @@ defmodule CommerceFront.Calculation do
   22 mar 24'
   base on override perc to calc
 
-  sale = CommerceFront.Settings.get_sale!(624)
-  referral = CommerceFront.Settings.get_referral_by_username("chingyee")
+  sale = CommerceFront.Settings.get_sale!(940 )
+  referral = CommerceFront.Settings.get_referral_by_username("foolim")
   CommerceFront.Calculation.special_share_reward(  referral.parent_user_id, sale.total_point_value, sale, "upgrade")
 
   """

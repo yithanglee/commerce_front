@@ -5962,8 +5962,10 @@ defmodule CommerceFront.Settings do
                                                stockist_user: stockist_user
                                              } ->
         if params["upgrade"] != nil do
+
           unless "merchant" in Map.keys(params) do
-            if "parent_user_id" in Map.keys(referral) do
+            if "parent_user_id" in Map.keys(referral) || :parent_user_id in Map.keys(referral) do
+
               special_share_reward(
                 referral.parent_user_id,
                 sale.total_point_value,
