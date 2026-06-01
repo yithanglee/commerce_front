@@ -242,8 +242,6 @@ defmodule CommerceFront.Calculation do
   end
 
   def stockist_register_bonus(stockist_user, username, pv, sale) do
-
-
     {calc_base, remarks_pv} =
       {sale.subtotal, sale.subtotal}
       |> IO.inspect(label: "calc_base, remarks_pv")
@@ -1531,12 +1529,30 @@ defmodule CommerceFront.Calculation do
 
       # 1star pool = 8k * 0.01  ?
 
+      # matrix = [
+      #   %{name: "1star", qualify: 1500},
+      #   %{name: "2star", qualify: 3000},
+      #   %{name: "3star", qualify: 10000},
+      #   %{name: "4star", qualify: 30000},
+      #   %{name: "5star", qualify: 50000}
+      # ]
+
+      # 1star当月2边各1500PV
+      # 2star当月2边各3000PV
+      # 优惠至2026年12月31日
+      # 3star当月2边各7000PV
+      # （原本2边各10,000PV)
+      # 4star当月2边各15000PV
+      # （原本2边各30,000PV)
+      # 5star当月2边各35000PV
+      # （原本2边各50,000PV)
+
       matrix = [
         %{name: "1star", qualify: 1500},
         %{name: "2star", qualify: 3000},
-        %{name: "3star", qualify: 10000},
-        %{name: "4star", qualify: 30000},
-        %{name: "5star", qualify: 50000}
+        %{name: "3star", qualify: 7000},
+        %{name: "4star", qualify: 15000},
+        %{name: "5star", qualify: 35000}
       ]
 
       for %{name: star_name, qualify: amount} = star <- matrix do
