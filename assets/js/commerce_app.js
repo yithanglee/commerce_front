@@ -1838,6 +1838,75 @@ export let commerceApp_ = {
             var needInstalment = false,
                 freebie = null,
                 instalmentProduct;
+
+
+
+            function checkUser(username) {
+
+
+                phxApp_.api("get_accumulated_sales", {
+                    show_instalment: true,
+                    parent_id: memberApp_.user.id,
+                    show_rank: true,
+                    username: username || $("[name='upgrade[username]']").val(),
+
+                }, () => {
+                    window.upgradeTarget = memberApp_.user.username
+                    $("input[name='user[upgrade]']").val(window.upgradeTarget)
+                    $(".selectUser").addClass("disabled")
+
+                },
+                    (res) => {
+                        phxApp_.notify("User verified!")
+                        $(".selectUser").removeClass("disabled")
+                        $(".pv-info").customHtml(`Accumulated sales PV: ` + res[0] + ` | Rank: ` + res[1])
+
+                        if (res[2].is_direct_downline) {
+                            $(".to-upgrade").removeClass("disabled")
+                        } else if (res[5].is_self) {
+                            $(".to-upgrade").removeClass("disabled")
+                            $("label[for='btnradio2']").click()
+                        } else {
+
+
+                            phxApp_.notify("User not direct downline!", {
+                                type: 'warning'
+                            })
+
+                            $("label[for='btnradio3']").click()
+                            $(".to-upgrade").addClass("disabled")
+                            if (res[4].outstanding_instalments != null) {
+                                if (res[4].outstanding_instalments.product.can_pay_by_drp) {
+                                    $(".to-upgrade").removeClass("disabled")
+                                }
+                            } else {
+
+                            }
+                        }
+                        // please stick DRP
+                        console.info(res[4].outstanding_instalments)
+                        try {
+                            if (res[4].outstanding_instalments != null) {
+
+
+                                $("input[name='user[shipping][fullname]']").val(res[4].outstanding_instalments.user.fullname)
+                                $("input[name='user[shipping][phone]']").val(res[4].outstanding_instalments.user.phone)
+                                $("input[name='user[instalment]']").val('Month no: ' + res[4].outstanding_instalments.month_no + '/' + res[4].outstanding_instalments.instalment.no_of_months)
+                                instalmentProduct = res[4].outstanding_instalments.product
+                                if (res[4].outstanding_instalments != null) {
+                                    freebie = res[4].outstanding_instalments.member_instalment_product.product
+                                }
+
+                            }
+                        } catch (e) {
+                            console.error(e)
+                        }
+                    })
+
+
+            }
+
+
             if ($("upgradeTarget").attr("instalment") != null) {
                 console.log("ok")
                 needInstalment = true
@@ -1871,66 +1940,16 @@ export let commerceApp_ = {
                             `,
                     header: 'Change Upgrade User',
                 })
+
                 $(".checkUser").click(() => {
 
+                    checkUser();
 
-                    phxApp_.api("get_accumulated_sales", {
-                        show_instalment: true,
-                        parent_id: memberApp_.user.id,
-                        show_rank: true,
-                        username: $("[name='upgrade[username]']").val(),
-
-                    }, () => {
-                        window.upgradeTarget = memberApp_.user.username
-                        $("input[name='user[upgrade]']").val(window.upgradeTarget)
-                        $(".selectUser").addClass("disabled")
-
-                    },
-                        (res) => {
-                            phxApp_.notify("User verified!")
-                            $(".selectUser").removeClass("disabled")
-                            $(".pv-info").customHtml(`Accumulated sales PV: ` + res[0] + ` | Rank: ` + res[1])
-
-                            if (res[2].is_direct_downline) {
-                                $(".to-upgrade").removeClass("disabled")
-                            } else if (res[5].is_self) {
-                                $(".to-upgrade").removeClass("disabled")
-                            } else {
-
-
-                                phxApp_.notify("User not direct downline!", {
-                                    type: 'warning'
-                                })
-
-                                $("label[for='btnradio3']").click()
-                                $(".to-upgrade").addClass("disabled")
-                                if (res[4].outstanding_instalments != null) {
-                                    if (res[4].outstanding_instalments.product.can_pay_by_drp) {
-                                        $(".to-upgrade").removeClass("disabled")
-                                    }
-                                } else {
-
-                                }
-                            }
-                            // please stick DRP
-                            console.info(res[4].outstanding_instalments)
-                            try {
-                                if (res[4].outstanding_instalments != null) {
-
-
-                                    $("input[name='user[shipping][fullname]']").val(res[4].outstanding_instalments.user.fullname)
-                                    $("input[name='user[shipping][phone]']").val(res[4].outstanding_instalments.user.phone)
-                                    $("input[name='user[instalment]']").val('Month no: ' + res[4].outstanding_instalments.month_no + '/' + res[4].outstanding_instalments.instalment.no_of_months)
-                                    instalmentProduct = res[4].outstanding_instalments.product
-                                    freebie = res[4].outstanding_instalments.member_instalment_product.product
-                                }
-                            } catch (e) {
-                                console.error(e)
-                            }
-                        })
 
 
                 })
+
+
                 $(".selectUser").click(() => {
                     $("input[name='user[upgrade]']").val($("[name='upgrade[username]']").val())
                     phxApp_.notify("User selected!")
@@ -1955,6 +1974,8 @@ export let commerceApp_ = {
 
                 })
             })
+
+            checkUser(memberApp_.user.username);
 
         },
         upgradeTargetMerchant() {
