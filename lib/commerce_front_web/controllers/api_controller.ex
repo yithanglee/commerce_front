@@ -428,6 +428,7 @@ defmodule CommerceFrontWeb.ApiController do
                 |> IO.inspect(label: "accumulated_sales_by_user #{user.username}")
                 |> List.insert_at(2, %{"is_direct_downline" => check})
                 |> List.insert_at(3, %{"is_downline" => check2 != []})
+                |> List.insert_at(4, %{"is_self" => parent.id == user.id})
 
               oi =
                 if params["show_instalment"] != nil do
@@ -594,37 +595,67 @@ defmodule CommerceFrontWeb.ApiController do
 
         # res
 
+        "referral_uplines" ->
+          if params["token"] != nil and params["username"] != nil do
+            Settings.check_uplines(params["username"], :referral)
+          else
+            []
+          end
+
         "node" ->
           if params["token"] != nil do
-            case Settings.decode_token(params["token"]) do
-              %{id: user_id} when is_integer(user_id) and user_id > 0 ->
-                root_user = Settings.get_user!(user_id)
+            # case Settings.decode_admin_token(params["token"]) do
+            #   admin_username when is_binary(admin_username) ->
+            #     # Admin/staff can query any username
+            #     cond do
+            #       params["id"] in [nil, "", "#"] ->
+            #         Settings.display_refer_tree(params["username"],
+            #           lazy: true,
+            #           max_depth: 5
+            #         )
 
-                cond do
-                  root_user == nil ->
-                    []
+            #       true ->
+            #         Settings.display_refer_tree_children_only(
+            #           params["username"],
+            #           params["id"],
+            #           lazy: true,
+            #           max_depth: 5
+            #         )
+            #     end
 
-                  root_user.username != params["username"] ->
-                    []
+            #   _ ->
+            #     # Fallback to member token
+            #     case Settings.decode_token(params["token"]) do
+            #       %{id: user_id} when is_integer(user_id) and user_id > 0 ->
+            #         root_user = Settings.get_user!(user_id)
 
-                  params["id"] in [nil, "", "#"] ->
-                    Settings.display_refer_tree(params["username"],
-                      lazy: true,
-                      max_depth: 5
-                    )
+            #         cond do
+            #           root_user == nil ->
+            #             []
 
-                  true ->
-                    Settings.display_refer_tree_children_only(
-                      params["username"],
-                      params["id"],
-                      lazy: true,
-                      max_depth: 5
-                    )
-                end
+            #           root_user.username != params["username"] ->
+            #             []
 
-              _ ->
-                []
-            end
+            #           params["id"] in [nil, "", "#"] ->
+            #             Settings.display_refer_tree(params["username"],
+            #               lazy: true,
+            #               max_depth: 5
+            #             )
+
+            #           true ->
+            #             Settings.display_refer_tree_children_only(
+            #               params["username"],
+            #               params["id"],
+            #               lazy: true,
+            #               max_depth: 5
+            #             )
+            #         end
+
+            #       _ ->
+            #         []
+            #     end
+            # end
+            Settings.display_refer_tree(params["username"]) || []
           else
             []
           end
@@ -1122,9 +1153,11 @@ defmodule CommerceFrontWeb.ApiController do
 
         "cancel_sales" ->
           sales_id = params["id"] |> String.to_integer()
+
           case Settings.cancel_sales(sales_id) do
             {:ok, _} ->
               %{status: "ok", message: "Sale #{sales_id} cancelled successfully"}
+
             {:error, reason} ->
               %{status: "error", reason: inspect(reason)}
           end
@@ -1246,11 +1279,9 @@ defmodule CommerceFrontWeb.ApiController do
 
           sales_person = Settings.get_user!(params["user"]["sales_person_id"])
 
-          with true <-
-                 params["user"]["upgrade"] == "" ||
-                   params["user"]["upgrade"] == sales_person.username,
+          with true <- params["user"]["upgrade"] == "",
                true <- params["user"]["payment"]["method"] == "register_point" do
-            %{status: "error", reason: "Cannot use DRP on self."}
+            %{status: "error", reason: "Need to choose a user to upgrade/repurchase."}
           else
             _ ->
               case Settings.create_sales_transaction(params) |> IO.inspect() do
@@ -1396,7 +1427,6 @@ defmodule CommerceFrontWeb.ApiController do
     append_session = fn conn ->
       # conn |> put_session(:test_session, %{id: 1, role: "tester"})
       conn
-
     end
 
     conn
@@ -2236,11 +2266,12 @@ defmodule CommerceFrontWeb.ApiController do
 
   def cancel_sales(conn, params) do
     sales_id = params["id"] |> String.to_integer()
-    
-    result = 
+
+    result =
       case Settings.cancel_sales(sales_id) do
         {:ok, _} ->
           %{status: "ok", message: "Sale #{sales_id} cancelled successfully"}
+
         {:error, reason} ->
           %{status: "error", reason: inspect(reason)}
       end

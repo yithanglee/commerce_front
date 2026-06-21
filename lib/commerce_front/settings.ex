@@ -3487,8 +3487,6 @@ defmodule CommerceFront.Settings do
           card =
             CommerceFront.Settings.find_weak_placement(tree, true, tree, nil, forced_direction)
 
-
-
           position =
             cond do
               forced_direction != nil ->
@@ -5059,7 +5057,7 @@ defmodule CommerceFront.Settings do
                      true <- (rp.total >= sale.grand_total - form_drp) |> IO.inspect(),
                      true <- form_drp <= (subtotal * 0.8) |> IO.inspect(label: "drp_usage"),
                      fin_amt <- sale.total_point_value - form_drp do
-                fin_amt =
+                  fin_amt =
                     if fin_amt < 0 do
                       0
                     else
@@ -5438,6 +5436,7 @@ defmodule CommerceFront.Settings do
 
 
   post_registration(    "Sales", 690)
+  sale = CommerceFront.Settings.get_sale!(969)
   """
 
   def post_registration(user_params, sale, title, form_drp) do
@@ -5502,7 +5501,8 @@ defmodule CommerceFront.Settings do
               sale.id,
               final_form_drp,
               user,
-              Date.utc_today()
+              Date.utc_today(),
+              sale.registration_details |> Jason.decode!() |> Map.get("scope") |> String.to_atom()
             )
           else
           end
@@ -5962,10 +5962,8 @@ defmodule CommerceFront.Settings do
                                                stockist_user: stockist_user
                                              } ->
         if params["upgrade"] != nil do
-
           unless "merchant" in Map.keys(params) do
             if "parent_user_id" in Map.keys(referral) || :parent_user_id in Map.keys(referral) do
-
               special_share_reward(
                 referral.parent_user_id,
                 sale.total_point_value,

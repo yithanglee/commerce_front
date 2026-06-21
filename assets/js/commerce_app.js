@@ -1858,17 +1858,17 @@ export let commerceApp_ = {
                     selector: "#mySubModal",
                     autoClose: false,
                     content: `
-          <div>
-            <div class="form-group">
-              <label>Username</label>
-              <input class="my-2 form-control" type="text" name='upgrade[username]'></input>
-                <div class="form-text text-muted pv-info"></div>
+                            <div>
+                                <div class="form-group">
+                                <label>Username</label>
+                                <input class="my-2 form-control" type="text" name='upgrade[username]' value="` + window.upgradeTarget + `"></input>
+                                    <div class="form-text text-muted pv-info"></div>
 
-              <button class="mt-4 btn btn-outline-primary checkUser">Check</button>
-              <button class="mt-4 btn btn-primary disabled selectUser">Select this user</button>
-            </div>
-          </div>
-          `,
+                                <button class="mt-4 btn btn-outline-primary checkUser">Check</button>
+                                <button class="mt-4 btn btn-primary disabled selectUser">Select this user</button>
+                                </div>
+                            </div>
+                            `,
                     header: 'Change Upgrade User',
                 })
                 $(".checkUser").click(() => {
@@ -1892,6 +1892,8 @@ export let commerceApp_ = {
                             $(".pv-info").customHtml(`Accumulated sales PV: ` + res[0] + ` | Rank: ` + res[1])
 
                             if (res[2].is_direct_downline) {
+                                $(".to-upgrade").removeClass("disabled")
+                            } else if (res[5].is_self) {
                                 $(".to-upgrade").removeClass("disabled")
                             } else {
 
@@ -2983,7 +2985,7 @@ export let commerceApp_ = {
                                 commerceApp_.components["cartItems"]()
                             })
                         })
-                    commerceApp_.applyStockistDeliveryMode()
+                        commerceApp_.applyStockistDeliveryMode()
                     })
                 }
 
@@ -3046,7 +3048,7 @@ export let commerceApp_ = {
                     let lines = [];
 
                     if (eligibleNow.length > 0) {
-                        const items = eligibleNow.slice(0, 3).map(f => `${f.product.name} x${f.qty || 1}`);
+                        const items = eligibleNow.map(f => `${f.product.name} x${f.qty || 1}`);
                         lines.push(`<div class="text-success">Eligible now: ${items.join(", ")}</div>`);
                     }
 
