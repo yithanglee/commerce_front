@@ -1536,7 +1536,7 @@ defmodule CommerceFront.Calculation do
       #   %{name: "4star", qualify: 30000},
       #   %{name: "5star", qualify: 50000}
       # ]
-
+      # 01/06/26: 
       # 1star当月2边各1500PV
       # 2star当月2边各3000PV
       # 优惠至2026年12月31日
