@@ -1970,15 +1970,15 @@ defmodule CommerceFront.Calculation do
   ---
   bromze g1 2%
 
-  sale = CommerceFront.Settings.get_sale!(764)
-  CommerceFront.Calculation.drp_sales_level_bonus(sale.id, 1078, sale.user, ~D[2026-03-21])
+  sale = CommerceFront.Settings.get_sale!(946)
+  CommerceFront.Calculation.drp_sales_level_bonus(sale.id, 150, sale.user, ~D[2026-06-21], sale.registration_details |> Jason.decode!() |> Map.get("scope") |> String.to_atom())
 
   16/07
 
   should use remaining RP aka deducted DRP, the remaining RP used for calculation.
 
   """
-  def drp_sales_level_bonus(sales_id, drp_amount, child_user, date) do
+  def drp_sales_level_bonus(sales_id, drp_amount, child_user, date, sales_type \\ :register) do
     {y, m, d} = date |> Date.to_erl()
 
     unpaid_node = unpaid_node()
@@ -1993,8 +1993,21 @@ defmodule CommerceFront.Calculation do
       |> List.insert_at(0, unpaid_node)
       |> Enum.reverse()
 
+    index_const = fn index ->
+      case sales_type do
+        :register ->
+          index > 0
+
+        :upgrade ->
+          index >= 0
+
+        _ ->
+          index > 0
+      end
+    end
+
     calc_fn = fn upline, index ->
-      if index <= 5 && index > 0 do
+      if index <= 5 && index_const.(index) do
         matrix = [
           %{rank: "铜级套餐", l1: 0.02, calculated: false},
           %{rank: "银级套餐", l1: 0.02, l2: 0.02, l3: 0.02, calculated: false},
@@ -2006,24 +2019,46 @@ defmodule CommerceFront.Calculation do
 
         perc =
           if cur_level != nil do
-            case index do
-              1 ->
-                cur_level |> Map.get(:l1, 0.0)
+            if sales_type == :upgrade do
+              case index do
+                0 ->
+                  cur_level |> Map.get(:l1, 0.0)
 
-              2 ->
-                cur_level |> Map.get(:l2, 0.0)
+                1 ->
+                  cur_level |> Map.get(:l2, 0.0)
 
-              3 ->
-                cur_level |> Map.get(:l3, 0.0)
+                2 ->
+                  cur_level |> Map.get(:l3, 0.0)
 
-              4 ->
-                cur_level |> Map.get(:l4, 0.0)
+                3 ->
+                  cur_level |> Map.get(:l4, 0.0)
 
-              5 ->
-                cur_level |> Map.get(:l5, 0.0)
+                4 ->
+                  cur_level |> Map.get(:l5, 0.0)
 
-              _ ->
-                0.0
+                _ ->
+                  0.0
+              end
+            else
+              case index do
+                1 ->
+                  cur_level |> Map.get(:l1, 0.0)
+
+                2 ->
+                  cur_level |> Map.get(:l2, 0.0)
+
+                3 ->
+                  cur_level |> Map.get(:l3, 0.0)
+
+                4 ->
+                  cur_level |> Map.get(:l4, 0.0)
+
+                5 ->
+                  cur_level |> Map.get(:l5, 0.0)
+
+                _ ->
+                  0.0
+              end
             end
           else
             0
@@ -2039,11 +2074,18 @@ defmodule CommerceFront.Calculation do
           end
 
         if amount > 0 do
+          level =
+            if sales_type == :upgrade do
+              index + 1
+            else
+              index
+            end
+
           p = %{
             sales_id: sales_id,
             is_paid: false,
             remarks:
-              "#{drp_amount} * #{perc} = #{amount}|level: #{index}| #{upline.parent} rank: #{upline.rank}",
+              "#{drp_amount} * #{perc} = #{amount}|level: #{level}| #{upline.parent} rank: #{upline.rank}",
             name: "drp sales level bonus",
             amount: amount,
             user_id: upline.parent_id,
