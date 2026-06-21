@@ -1865,7 +1865,7 @@ export let commerceApp_ = {
                             $(".to-upgrade").removeClass("disabled")
                         } else if (res[5].is_self) {
                             $(".to-upgrade").removeClass("disabled")
-                            $("label[for='btnradio2']").click()
+                            // $("label[for='btnradio2']").click()
                         } else {
 
 
