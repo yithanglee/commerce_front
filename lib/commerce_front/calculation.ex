@@ -417,18 +417,23 @@ defmodule CommerceFront.Calculation do
               CommerceFront.Settings.get_product_by_name(sales_item.item_name)
             end
 
+          # merchant products will never have  override_special_share_payout
+
           if product.override_special_share_payout do
             CommerceFront.Settings.create_wallet_transaction(%{
               user_id: user_id,
-              amount: (pv * product.override_special_share_payout_perc) |> Float.round(2),
-              remarks: "sale-#{sale.id}|#{product.name}",
+              amount:
+                (product.point_value * sales_item.qty *
+                   Map.get(product, :override_special_share_payout_perc, override_perc))
+                |> Float.round(2),
+              remarks: "sale-#{sale.id}|#{product.name}|SpecialShareReward",
               wallet_type: "direct_recruitment"
             })
           else
             CommerceFront.Settings.create_wallet_transaction(%{
               user_id: user_id,
-              amount: (pv * override_perc) |> Float.round(2),
-              remarks: "sale-#{sale.id}|#{product.name}",
+              amount: (product.point_value * sales_item.qty * override_perc) |> Float.round(2),
+              remarks: "sale-#{sale.id}|#{product.name}|SpecialShareReward",
               wallet_type: "direct_recruitment"
             })
           end
@@ -1536,7 +1541,7 @@ defmodule CommerceFront.Calculation do
       #   %{name: "4star", qualify: 30000},
       #   %{name: "5star", qualify: 50000}
       # ]
-      # 01/06/26: 
+      # 01/06/26:
       # 1star当月2边各1500PV
       # 2star当月2边各3000PV
       # 优惠至2026年12月31日
