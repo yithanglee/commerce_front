@@ -5499,22 +5499,22 @@ defmodule CommerceFront.Settings do
           unless "merchant" in Map.keys(user_params) do
             # need to find the sales type.
 
-            sales_type = sale.registration_details |> Jason.decode!() |> Map.get("scope") |> String.to_atom()
-
+            sales_type =
+              sale.registration_details |> Jason.decode!() |> Map.get("scope") |> String.to_atom()
 
             # even if its an upgrade, but if the upgrade target is self, then cont to treat it as :upgrade,
             # but if the upgrade target is others, then we need to set it as :register
 
-          sales_type =
-            if sales_type == :upgrade do
-              if sale.sales_person_id == sale.user_id do
-                :upgrade
+            sales_type =
+              if sales_type == :upgrade do
+                if sale.sales_person_id == sale.user_id do
+                  :upgrade
+                else
+                  :register
+                end
               else
                 :register
               end
-            else
-              :register
-            end
 
             CommerceFront.Calculation.drp_sales_level_bonus(
               sale.id,

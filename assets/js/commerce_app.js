@@ -2777,6 +2777,7 @@ export let commerceApp_ = {
                 return v.name == "Singapore"
             })[0]
             if (malaysia.id == phxApp_.chosen_country_id_.id) {
+                console.log("eval shiping fee")
                 if ($("[name='user[pick_up_point_id]']").val() != "") {
                     s = 0
                 } else {
@@ -3353,7 +3354,7 @@ export let commerceApp_ = {
                 var stVal = $("input[name='user[stockist_user_id]'], select[name='user[stockist_user_id]']").val();
                 if (stVal != null && stVal !== "") {
 
-                    shipping_fee = 0
+                    // shipping_fee = 0
 
                 }
                 // very likely this is for the repurchase....
@@ -3571,6 +3572,7 @@ export let commerceApp_ = {
                     }
                 }
                 shipping_fee = commerceApp_.components.evalShipping(subtotal)
+                console.log(shipping_fee, "eval shiping fee2")
                 if (has_instalment_info) {
                     shipping_fee = 0.0
                 }
