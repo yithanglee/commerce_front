@@ -5519,7 +5519,7 @@ defmodule CommerceFront.Settings do
             CommerceFront.Calculation.drp_sales_level_bonus(
               sale.id,
               final_form_drp,
-              user,
+              sale.user,
               Date.utc_today(),
               sales_type
             )
@@ -6108,6 +6108,20 @@ defmodule CommerceFront.Settings do
                   })
 
                 "drp" ->
+                  product =
+                    CommerceFront.Settings.get_product!(cumulative_purchase_freebie.product_id)
+
+                  # add the product to the sale
+                  create_sales_item(%{
+                    item_pv: product.point_value,
+                    img_url: product.img_url,
+                    sales_id: sale.id,
+                    item_name: product.name,
+                    qty: cumulative_purchase_freebie.qty,
+                    item_price: product.retail_price,
+                    remarks: remark
+                  })
+
                   CommerceFront.Settings.create_wallet_transaction(%{
                     user_id: user.id,
                     amount: cumulative_purchase_freebie.drp,

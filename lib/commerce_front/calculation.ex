@@ -1976,7 +1976,7 @@ defmodule CommerceFront.Calculation do
   bromze g1 2%
 
   sale = CommerceFront.Settings.get_sale!(946)
-  CommerceFront.Calculation.drp_sales_level_bonus(sale.id, 150, sale.user, ~D[2026-06-21], sale.registration_details |> Jason.decode!() |> Map.get("scope") |> String.to_atom())
+  CommerceFront.Calculation.drp_sales_level_bonus(sale.id, 1078, sale.user, ~D[2026-06-25], :upgrade)
 
   16/07
 
