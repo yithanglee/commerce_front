@@ -516,8 +516,8 @@ defmodule CommerceFront.Settings do
     {amount, _tail} = Float.parse(params["amount"])
 
     cond do
-      amount < 50 ->
-        {:error, Ecto.Changeset.add_error(cg, :amount, "Cannot be less than 50")}
+      amount < 10 ->
+        {:error, Ecto.Changeset.add_error(cg, :amount, "Cannot be less than 10")}
 
       amount > wallet.total ->
         {:error,
