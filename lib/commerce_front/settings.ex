@@ -5488,7 +5488,7 @@ defmodule CommerceFront.Settings do
         wallet_type: "merchant"
       })
 
-      sale = sale |> Repo.preload(:sales_items)
+      sale = sale |> Repo.preload([:sales_items, :user])
 
       total_pv = sale.sales_items |> Enum.map(& &1.item_price) |> Enum.sum()
 
@@ -5519,7 +5519,7 @@ defmodule CommerceFront.Settings do
             CommerceFront.Calculation.drp_sales_level_bonus(
               sale.id,
               final_form_drp,
-              sale.user,
+              user,
               Date.utc_today(),
               sales_type
             )
