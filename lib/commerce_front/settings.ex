@@ -5507,7 +5507,7 @@ defmodule CommerceFront.Settings do
 
             sales_type =
               if sales_type == :upgrade do
-                if sale.sales_person_id == sale.user_id do
+                if sale.sales_person_id == user.id do
                   :upgrade
                 else
                   :register
