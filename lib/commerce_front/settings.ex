@@ -5519,7 +5519,7 @@ defmodule CommerceFront.Settings do
             CommerceFront.Calculation.drp_sales_level_bonus(
               sale.id,
               final_form_drp,
-              sale.user,
+              user,
               Date.utc_today(),
               sales_type
             )
