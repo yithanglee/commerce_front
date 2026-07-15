@@ -3481,11 +3481,11 @@ export let commerceApp_ = {
                         // DRP use
                         if (check.length > 0) {
                             var wallet = check[0]
-
+                            $("#drp_payment").attr("step", 0.01)
                             if (is_merchant) {
-                                $("#drp_payment").attr("max", subtotal * 0.2)
+                                $("#drp_payment").attr("max", (subtotal * 0.2).toFixed(2))
                                 $("#drp_payment").attr("min", 0)
-                                $("#drp_payment").attr("step", 0.01)
+
                                 $("#drp_payment").attr("value", subtotal * 0.2)
 
                             } else {
@@ -3508,11 +3508,11 @@ export let commerceApp_ = {
 
                                     var minOverrideDrp = Math.round(subtotal2)
                                     var maxOverrideDrp = Math.max(minOverrideDrp, Math.round(subtotal3))
-                                    $("#drp_payment").attr("max", maxOverrideDrp)
+                                    $("#drp_payment").attr("max", parseFloat(maxOverrideDrp).toFixed(2))
                                     $("#drp_payment").attr("min", minOverrideDrp)
                                     $("#drp_payment").attr("value", minOverrideDrp)
                                 } else {
-                                    $("#drp_payment").attr("max", wallet.total * 0.8)
+                                    $("#drp_payment").attr("max", (wallet.total * 0.8).toFixed(2))
                                     $("#drp_payment").attr("min", Math.round(subtotal * 0.5))
                                     $("#drp_payment").attr("value", Math.round(subtotal * 0.5))
 
