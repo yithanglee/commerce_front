@@ -3500,21 +3500,25 @@ export let commerceApp_ = {
                                     }, 0)
                                     var subtotal3 = cart.map((v, i) => {
                                         var overridePercMax = typeof v.override_perc_max === "number" ? v.override_perc_max : 0.8
+                                        console.log('overridePercMax', overridePercMax)
+                                        console.log('v.retail_price', v.retail_price)
+                                        console.log('v.qty', v.qty)
+                                        console.log('v.retail_price * v.qty * overridePercMax', v.retail_price * v.qty * overridePercMax)
                                         return (v.qty * v.retail_price * overridePercMax)
                                     }).reduce((a, b) => {
                                         return a + b
                                     }, 0)
 
 
-                                    var minOverrideDrp = Math.round(subtotal2)
-                                    var maxOverrideDrp = Math.max(minOverrideDrp, Math.round(subtotal3))
-                                    $("#drp_payment").attr("max", parseFloat(maxOverrideDrp).toFixed(2))
-                                    $("#drp_payment").attr("min", minOverrideDrp)
-                                    $("#drp_payment").attr("value", minOverrideDrp)
+                                    var minOverrideDrp = subtotal2
+                                    var maxOverrideDrp = Math.max(minOverrideDrp, subtotal3)
+                                    $("#drp_payment").attr("max", maxOverrideDrp.toFixed(2))
+                                    $("#drp_payment").attr("min", minOverrideDrp.toFixed(2))
+                                    $("#drp_payment").attr("value", minOverrideDrp.toFixed(2))
                                 } else {
-                                    $("#drp_payment").attr("max", (wallet.total * 0.8).toFixed(2))
-                                    $("#drp_payment").attr("min", Math.round(subtotal * 0.5))
-                                    $("#drp_payment").attr("value", Math.round(subtotal * 0.5))
+                                    $("#drp_payment").attr("max", (subtotal * 0.8).toFixed(2))
+                                    $("#drp_payment").attr("min", (subtotal * 0.5).toFixed(2))
+                                    $("#drp_payment").attr("value", (subtotal * 0.5).toFixed(2))
 
                                 }
 
