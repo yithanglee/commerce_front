@@ -5490,7 +5490,7 @@ defmodule CommerceFront.Settings do
 
       sale = sale |> Repo.preload([:sales_items, :user])
 
-      total_pv = sale.sales_items |> Enum.map(& &1.item_price) |> Enum.sum()
+      total_pv = sale.sales_items |> Enum.map(&(&1.item_price * &1.qty)) |> Enum.sum()
 
       final_form_drp = total_pv + sale.shipping_fee - form_drp
 
